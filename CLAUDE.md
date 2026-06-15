@@ -17,17 +17,17 @@ npx supabase gen types typescript --project-id <id> > lib/database.types.ts  # r
 
 ## 2. Architecture & Stack
 
-| Layer      | Tool                      | Role                                             |
-| ---------- | ------------------------- | ------------------------------------------------ |
-| Framework  | Next.js 14 (App Router)   | Server components, server actions, middleware    |
-| Database   | Supabase PostgreSQL       | Primary data store with RLS enforcement          |
-| Auth       | Supabase Auth             | Email/password + GitHub OAuth                    |
-| Storage    | Supabase Storage          | Photo uploads, CDN delivery                      |
-| Realtime   | Supabase Realtime         | WebSocket subscriptions for live comments        |
-| Map        | Mapbox via `react-map-gl` | WebGL map rendering, geocoding API               |
-| State      | Zustand                   | Shared `activePinId` (map marker → feed scroll)  |
-| UI         | shadcn/ui + Tailwind CSS  | Component library, utility-first styling         |
-| Deployment | Vercel                    | Serverless, preview deployments per branch       |
+| Layer      | Tool                      | Role                                            |
+| ---------- | ------------------------- | ----------------------------------------------- |
+| Framework  | Next.js 14 (App Router)   | Server components, server actions, middleware   |
+| Database   | Supabase PostgreSQL       | Primary data store with RLS enforcement         |
+| Auth       | Supabase Auth             | Email/password + GitHub OAuth                   |
+| Storage    | Supabase Storage          | Photo uploads, CDN delivery                     |
+| Realtime   | Supabase Realtime         | WebSocket subscriptions for live comments       |
+| Map        | Mapbox via `react-map-gl` | WebGL map rendering, geocoding API              |
+| State      | Zustand                   | Shared `activePinId` (map marker → feed scroll) |
+| UI         | shadcn/ui + Tailwind CSS  | Component library, utility-first styling        |
+| Deployment | Vercel                    | Serverless, preview deployments per branch      |
 
 **Supabase clients:**
 

@@ -2,8 +2,8 @@
 
 ## Phase 1 — Foundation & Authentication
 
-- [ ] Next.js 14 project setup with TypeScript, Tailwind CSS, and App Router
-- [ ] Supabase PostgreSQL schema with RLS policies on all tables (`supabase/schema.sql`)
+- [x] Next.js 14 project setup with TypeScript, Tailwind CSS, and App Router
+- [x] Supabase PostgreSQL schema with RLS policies on all tables (`supabase/schema.sql`)
 - [ ] Email/password and GitHub OAuth via Supabase Auth
 - [ ] Route protection and session management via middleware and `@supabase/ssr`
 
