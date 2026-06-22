@@ -1,6 +1,33 @@
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default function Login() {
+export default async function Login({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; message?: string }>;
+}) {
+  const { error: errorParam, message } = await searchParams;
+
+  async function login(formData: FormData) {
+    "use server";
+
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    });
+
+    if (error) {
+      console.log("login error: ", JSON.stringify(error));
+      redirect(
+        `/login?error=${encodeURIComponent(error.message ?? JSON.stringify(error))}`,
+      );
+    }
+
+    redirect("/map");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-8 shadow-sm dark:bg-zinc-900">
@@ -13,7 +40,10 @@ export default function Login() {
           </p>
         </div>
 
-        <form action="" className="space-y-4">
+        {message && <p className="text-sm text-green-600">{message}</p>}
+        {errorParam && <p className="text-sm text-red-500">{errorParam}</p>}
+
+        <form action={login} className="space-y-4">
           <input
             type="email"
             id="email"

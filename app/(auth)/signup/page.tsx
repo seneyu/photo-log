@@ -22,7 +22,7 @@ export default async function Signup({
     });
 
     if (error) {
-      console.log("signup error:", JSON.stringify(error));
+      console.log("signup error: ", JSON.stringify(error));
       redirect(
         `/signup?error=${encodeURIComponent(error.message ?? JSON.stringify(error))}`,
       );
