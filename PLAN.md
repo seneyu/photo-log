@@ -4,8 +4,8 @@
 
 - [x] Next.js 14 project setup with TypeScript, Tailwind CSS, and App Router
 - [x] Supabase PostgreSQL schema with RLS policies on all tables (`supabase/schema.sql`)
-- [ ] Email/password and GitHub OAuth via Supabase Auth
-- [ ] Route protection and session management via middleware and `@supabase/ssr`
+- [x] Email/password and GitHub OAuth via Supabase Auth
+- [x] Route protection and session management via middleware and `@supabase/ssr`
 
 ## Phase 2 — Core Map Experience & Uploads
 
