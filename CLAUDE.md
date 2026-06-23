@@ -19,7 +19,7 @@ npx supabase gen types typescript --project-id <id> > lib/database.types.ts  # r
 
 | Layer      | Tool                      | Role                                            |
 | ---------- | ------------------------- | ----------------------------------------------- |
-| Framework  | Next.js 14 (App Router)   | Server components, server actions, middleware   |
+| Framework  | Next.js 16 (App Router)   | Server components, server actions, proxy        |
 | Database   | Supabase PostgreSQL       | Primary data store with RLS enforcement         |
 | Auth       | Supabase Auth             | Email/password + GitHub OAuth                   |
 | Storage    | Supabase Storage          | Photo uploads, CDN delivery                     |
@@ -85,3 +85,6 @@ Every table has RLS enabled. Policies enforce ownership at the database level. A
 
 **@supabase/ssr only.**
 The old `@supabase/auth-helpers-nextjs` package is deprecated and does not support the App Router session model correctly. Using it will cause auth bugs on server components and middleware.
+
+**`proxy.ts`, not `middleware.ts`.**
+Next.js 16 deprecated `middleware.ts`. The request interceptor lives in `proxy.ts` at the project root and exports an async function named `proxy`. Never rename it to `middleware.ts` or suggest doing so.
