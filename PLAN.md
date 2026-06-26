@@ -9,7 +9,7 @@
 
 ## Phase 2 — Core Map Experience & Uploads
 
-- [ ] Responsive split-view layout — Mapbox map (60%) alongside public feed (40%)
+- [x] Responsive split-view layout — Mapbox map (60%) alongside public feed (40%)
 - [ ] Photo upload with manual Mapbox Geocoding text search autocomplete lookup
 - [ ] Fast client-side pin rendering with Mapbox default marker styles
 - [ ] `createPin` Server Action to handle file storage uploads and database row writes
