@@ -1,12 +1,12 @@
 "use client";
 
-import Map from "react-map-gl/mapbox";
+import MapPanel from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function MapGL() {
   return (
     <div className="flex h-full overflow-hidden">
-      <Map
+      <MapPanel
         mapboxAccessToken={`${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
         initialViewState={{
           longitude: -122.4,
