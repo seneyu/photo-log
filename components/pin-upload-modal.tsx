@@ -1,6 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+
+type GeoFeature = {
+  id: string;
+  properties: {
+    name: string;
+    full_address: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+};
 
 export default function PinUploadModal({
   toggleModal,
@@ -9,6 +21,14 @@ export default function PinUploadModal({
 }) {
   const [validFiles, setValidFiles] = useState<File[]>([]); // File object has properties name, size, type
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [suggestions, setSuggestions] = useState<GeoFeature[]>([]);
+  const [coordinates, setCoordinates] = useState<{
+    lat: number;
+    lng: number;
+    location_name: string;
+  } | null>(null);
 
   // 10MB in bytes
   const MAX_FILE_SIZE_BYTES = 10485760;
@@ -31,6 +51,33 @@ export default function PinUploadModal({
 
     setErrorMessage(errors.join(" "));
     setValidFiles(approvedFiles);
+  };
+
+  // geocoding api runs only when user stop typing for 800ms
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLocationChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const inputLocation = e.target.value;
+    if (!inputLocation) return;
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/search/geocode/v6/forward?q=${inputLocation}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+        );
+
+        const data = await res.json();
+
+        // console.log(data.features);
+        setSuggestions(data.features ?? []);
+      } catch (err) {
+        console.error("Geocoding error: ", err);
+      }
+    }, 800);
   };
 
   return (
@@ -74,19 +121,48 @@ export default function PinUploadModal({
             <input
               type="text"
               name="caption"
-              placeholder="Shot on Portra 400, f/2.8 at golden hour..."
+              placeholder="e.g. Shot on Portra 400, f/2.8 at golden hour..."
               className="w-full border px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="relative flex flex-col gap-1">
             <label className="text-s font-medium text-zinc-700">Location</label>
             <input
               type="text"
               name="location_name"
-              placeholder="Search a place, e.g. Golden Gate Park, San Francisco"
+              placeholder="e.g. Golden Gate Park, San Francisco"
               className="w-full border px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
               required
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                handleLocationChange(e);
+              }}
             />
+            {suggestions.length > 0 && (
+              <ul className="absolute top-full left-0 right-0 z-10 max-h-36 overflow-y-auto border border-zinc-200 bg-white shadow-md">
+                {suggestions.map((feature) => (
+                  <li
+                    key={feature.id}
+                    className="flex cursor-pointer flex-col px-3 py-2 hover:bg-zinc-50"
+                    onClick={() => {
+                      setCoordinates({
+                        lat: feature.properties.coordinates.latitude,
+                        lng: feature.properties.coordinates.longitude,
+                        location_name: feature.properties.name,
+                      });
+                      setLocation(feature.properties.name);
+                      setSuggestions([]);
+                    }}
+                  >
+                    <span className="text-sm">{feature.properties.name}</span>
+                    <span className="text-xs text-zinc-400">
+                      {feature.properties.full_address}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-s font-medium text-zinc-700">
