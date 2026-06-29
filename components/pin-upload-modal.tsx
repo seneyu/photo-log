@@ -2,16 +2,11 @@
 
 import { useState, useRef } from "react";
 
-type GeoFeature = {
-  id: string;
-  properties: {
-    name: string;
-    full_address: string;
-    coordinates: {
-      latitude: number;
-      longitude: number;
-    };
-  };
+type SearchSuggestions = {
+  mapbox_id: string;
+  address?: string;
+  name: string;
+  place_formatted: string;
 };
 
 export default function PinUploadModal({
@@ -23,12 +18,67 @@ export default function PinUploadModal({
   const [errorMessage, setErrorMessage] = useState("");
 
   const [location, setLocation] = useState("");
-  const [suggestions, setSuggestions] = useState<GeoFeature[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchSuggestions[]>([]);
   const [coordinates, setCoordinates] = useState<{
     lat: number;
     lng: number;
     location_name: string;
   } | null>(null);
+
+  // session token per modal open to group a single search session
+  const sessionToken = useRef(crypto.randomUUID());
+
+  // search box api runs only when user stop typing for 1000ms
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // search box api: /suggest and /retrieve endpoints for an interactive search with autocompelte
+  // /suggest
+  const handleLocationChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const searchText = e.target.value;
+    if (!searchText) return;
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/search/searchbox/v1/suggest?q=${searchText}&session_token=${sessionToken}&types=place,locality,neighborhood,street,address,poi,category&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+        );
+
+        const data = await res.json();
+
+        console.log(data.suggestions);
+        setSuggestions(data.suggestions ?? []);
+      } catch (err) {
+        console.error("Search box api /search suggestions error: ", err);
+      }
+    }, 1000);
+  };
+
+  // /retrieve
+  const handleRetrieveSuggestion = async (id: string) => {
+    try {
+      const res = await fetch(
+        `https://api.mapbox.com/search/searchbox/v1/retrieve/${id}?session_token=${sessionToken}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+      );
+
+      const data = await res.json();
+      console.log(data);
+
+      setCoordinates({
+        lat: data.features[0].properties.coordinates.latitude,
+        lng: data.features[0].properties.coordinates.longitude,
+        location_name: data.features[0].properties.name,
+      });
+
+      setLocation(data.features[0].properties.name);
+      setSuggestions([]);
+    } catch (err) {
+      console.error("Search box api /retrieve suggestion error: ", err);
+    }
+  };
 
   // 10MB in bytes
   const MAX_FILE_SIZE_BYTES = 10485760;
@@ -36,48 +86,25 @@ export default function PinUploadModal({
   // handle and validate file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files ?? []);
-    const approvedFiles: File[] = [];
-    const errors: string[] = [];
+    if (selectedFiles.length > 5) {
+      window.alert("Do not select more than 5 images.");
+    } else {
+      const approvedFiles: File[] = [];
+      const errors: string[] = [];
 
-    selectedFiles.forEach((file) => {
-      if (!file.type.startsWith("image/")) {
-        errors.push(`${file.name} is not an image.`);
-      } else if (file.size > MAX_FILE_SIZE_BYTES) {
-        errors.push(`${file.name} exceeds 10MB.`);
-      } else {
-        approvedFiles.push(file);
-      }
-    });
+      selectedFiles.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          errors.push(`${file.name} is not an image.`);
+        } else if (file.size > MAX_FILE_SIZE_BYTES) {
+          errors.push(`${file.name} exceeds 10MB.`);
+        } else {
+          approvedFiles.push(file);
+        }
+      });
 
-    setErrorMessage(errors.join(" "));
-    setValidFiles(approvedFiles);
-  };
-
-  // geocoding api runs only when user stop typing for 800ms
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleLocationChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const inputLocation = e.target.value;
-    if (!inputLocation) return;
-
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
-    debounceTimer.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `https://api.mapbox.com/search/geocode/v6/forward?q=${inputLocation}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
-        );
-
-        const data = await res.json();
-
-        // console.log(data.features);
-        setSuggestions(data.features ?? []);
-      } catch (err) {
-        console.error("Geocoding error: ", err);
-      }
-    }, 800);
+      setErrorMessage(errors.join(" "));
+      setValidFiles(approvedFiles);
+    }
   };
 
   return (
@@ -141,23 +168,19 @@ export default function PinUploadModal({
             />
             {suggestions.length > 0 && (
               <ul className="absolute top-full left-0 right-0 z-10 max-h-36 overflow-y-auto border border-zinc-200 bg-white shadow-md">
-                {suggestions.map((feature) => (
+                {suggestions.map((suggestion) => (
                   <li
-                    key={feature.id}
+                    key={suggestion.mapbox_id}
                     className="flex cursor-pointer flex-col px-3 py-2 hover:bg-zinc-50"
-                    onClick={() => {
-                      setCoordinates({
-                        lat: feature.properties.coordinates.latitude,
-                        lng: feature.properties.coordinates.longitude,
-                        location_name: feature.properties.name,
-                      });
-                      setLocation(feature.properties.name);
-                      setSuggestions([]);
-                    }}
+                    onClick={() =>
+                      handleRetrieveSuggestion(suggestion.mapbox_id)
+                    }
                   >
-                    <span className="text-sm">{feature.properties.name}</span>
+                    <span className="text-sm">{suggestion.name}</span>
                     <span className="text-xs text-zinc-400">
-                      {feature.properties.full_address}
+                      {suggestion.address
+                        ? suggestion.address
+                        : suggestion.place_formatted}
                     </span>
                   </li>
                 ))}
