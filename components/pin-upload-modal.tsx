@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { createPin } from "@/lib/actions/pins";
 
 type SearchSuggestions = {
   mapbox_id: string;
@@ -16,6 +17,10 @@ export default function PinUploadModal({
 }) {
   const [validFiles, setValidFiles] = useState<File[]>([]); // File object has properties name, size, type
   const [errorMessage, setErrorMessage] = useState("");
+  const [postErrorMessage, setPostErrorMessage] = useState("");
+
+  const [caption, setCaption] = useState("");
+  const [visitDate, setVisitDate] = useState("");
 
   const [location, setLocation] = useState("");
   const [suggestions, setSuggestions] = useState<SearchSuggestions[]>([]);
@@ -49,7 +54,7 @@ export default function PinUploadModal({
 
         const data = await res.json();
 
-        console.log(data.suggestions);
+        // console.log(data.suggestions);
         setSuggestions(data.suggestions ?? []);
       } catch (err) {
         console.error("Search box api /search suggestions error: ", err);
@@ -65,7 +70,7 @@ export default function PinUploadModal({
       );
 
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
 
       setCoordinates({
         lat: data.features[0].properties.coordinates.latitude,
@@ -107,6 +112,22 @@ export default function PinUploadModal({
     }
   };
 
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget); // reads current value of every 'name' attribute in <form> element
+
+    for (const [key, value] of formData) {
+      console.log(key + " " + value);
+    }
+
+    const { success, error } = await createPin(formData);
+
+    if (!success) {
+      setPostErrorMessage(error);
+    } else toggleModal();
+  };
+
   return (
     // modal backdrop
     <div
@@ -114,7 +135,10 @@ export default function PinUploadModal({
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
     >
       {/* modal container */}
-      <form className="w-full max-w-md rounded-xl bg-white px-8 py-4">
+      <form
+        className="w-full max-w-md rounded-xl bg-white px-8 py-4"
+        onSubmit={handleSubmit}
+      >
         <div className="flex items-center justify-between py-4 border-b">
           <h1 className="font-semibold text-lg">Add Pin</h1>
           <span
@@ -133,7 +157,7 @@ export default function PinUploadModal({
             <input
               type="file"
               accept="image/*"
-              name="photo_urls"
+              name="photo_files"
               className="cursor-pointer text-sm text-zinc-500"
               multiple
               required
@@ -150,6 +174,7 @@ export default function PinUploadModal({
               name="caption"
               placeholder="e.g. Shot on Portra 400, f/2.8 at golden hour..."
               className="w-full border px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+              onChange={(e) => setCaption(e.target.value)}
             />
           </div>
           <div className="relative flex flex-col gap-1">
@@ -186,6 +211,8 @@ export default function PinUploadModal({
                 ))}
               </ul>
             )}
+            <input type="hidden" name="lat" value={coordinates?.lat ?? ""} />
+            <input type="hidden" name="lng" value={coordinates?.lng ?? ""} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-s font-medium text-zinc-700">
@@ -195,6 +222,7 @@ export default function PinUploadModal({
               type="date"
               name="visited_at"
               className="w-full border px-3 py-2 text-sm text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+              onChange={(e) => setVisitDate(e.target.value)}
             />
           </div>
         </div>
@@ -207,6 +235,9 @@ export default function PinUploadModal({
             Post
           </button>
         </div>
+        {postErrorMessage && (
+          <p className="text-sm text-red-500">{postErrorMessage}</p>
+        )}
       </form>
     </div>
   );
