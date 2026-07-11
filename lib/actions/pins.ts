@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "../supabase/server";
 
 export async function createPin(formData: FormData) {
@@ -66,5 +67,6 @@ export async function createPin(formData: FormData) {
     return { success: false, error: "Failed to save data." };
   }
 
+  revalidatePath("/map");
   return { success: true, error: "" };
 }

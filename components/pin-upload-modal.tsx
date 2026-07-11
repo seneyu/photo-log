@@ -117,10 +117,6 @@ export default function PinUploadModal({
 
     const formData = new FormData(e.currentTarget); // reads current value of every 'name' attribute in <form> element
 
-    for (const [key, value] of formData) {
-      console.log(key + " " + value);
-    }
-
     const { success, error } = await createPin(formData);
 
     if (!success) {
@@ -222,6 +218,7 @@ export default function PinUploadModal({
               type="date"
               name="visited_at"
               className="w-full border px-3 py-2 text-sm text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+              required
               onChange={(e) => setVisitDate(e.target.value)}
             />
           </div>
@@ -230,7 +227,8 @@ export default function PinUploadModal({
         <div className="flex justify-end py-5">
           <button
             type="submit"
-            className="rounded-lg bg-black px-5 py-2 text-sm text-white hover:bg-zinc-700 cursor-pointer"
+            className="rounded-full border border-zinc-300 bg-white px-8 py-1.5 text-sm text-zinc-500 cursor-not-allowed enabled:cursor-pointer enabled:border-black enabled:bg-black enabled:text-white enabled:hover:bg-zinc-700"
+            disabled={!coordinates || !location || !validFiles || !visitDate}
           >
             Post
           </button>
