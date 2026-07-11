@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
-// import MapPanel from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import * as mapboxgl from "mapbox-gl/esm";
 
