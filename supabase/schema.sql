@@ -11,11 +11,12 @@ CREATE TABLE profiles (
 CREATE TABLE pins (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-    photo_url text NOT NULL,
+    photo_urls text[] NOT NULL DEFAULT '{}',
     caption text,
     lat float8 NOT NULL,
     lng float8 NOT NULL,
     location_name text,
+    visited_at date,
     created_at timestamptz DEFAULT now()
 );
 
