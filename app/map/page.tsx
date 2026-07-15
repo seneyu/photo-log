@@ -19,12 +19,12 @@ export default async function MapPage() {
     <MapStoreProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Map - 60% */}
-        <div className="h-full w-3/5">
+        <div className="h-full w-3/4">
           <MapPanel pins={pins ?? []} />
         </div>
 
         {/* Feed column - 40% */}
-        <Feedpanel pins={pins ?? []} />
+        <Feedpanel user={user} pins={pins ?? []} />
       </div>
     </MapStoreProvider>
   );

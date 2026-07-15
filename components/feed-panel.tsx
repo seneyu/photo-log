@@ -1,34 +1,105 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Nav from "./nav";
 import PinUploadModal from "./pin-upload-modal";
 import { Pin } from "@/lib/types";
+import type { User } from "@supabase/supabase-js";
+import { useMapStore } from "@/providers/map-store-provider";
 
-export default function Feedpanel({ pins }: { pins: Pin[] }) {
+export default function Feedpanel({
+  user,
+  pins,
+}: {
+  user: User | null;
+  pins: Pin[];
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const activePinId = useMapStore((state) => state.activePinId);
+  const cardRefs = useRef<Record<string, HTMLDivElement>>({});
 
   const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
+    setIsModalOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (activePinId && cardRefs.current[activePinId]) {
+      cardRefs.current[activePinId].scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }, [activePinId]);
+
+  const formatDate = (value: string | null) => {
+    if (!value) return "";
+    return new Date(value).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (value: string | null) => {
+    if (!value) return "";
+    return new Date(value).toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   return (
-    <div className="flex h-full w-2/5 flex-col border-l">
+    <div className="flex h-full w-2/5 flex-col border-l bg-neutral-50 min-h-0">
       <Nav toggleModal={toggleModal} />
-      <div className="flex-1 overflow-y-auto p-4">
-        {pins.map((pin) => (
-          <div key={pin.id}>
-            <div>
-              {pin.photo_urls.map((url: string, i: number) => (
-                <img key={i} src={url} />
-              ))}
+      <div className="flex-1 min-h-0 overflow-y-auto p-8 flex flex-col items-center">
+        {pins.map((pin) => {
+          const isActive = activePinId === pin.id;
+          const coverPhoto = pin.photo_urls[0];
+          const photoCount = pin.photo_urls.length;
+
+          return (
+            <div
+              key={pin.id}
+              ref={(ele) => {
+                if (ele) cardRefs.current[pin.id] = ele;
+                else delete cardRefs.current[pin.id];
+              }}
+              className={`p-4 mb-6 w-[80%] flex-shrink-0 flex flex-col items-center rounded-lg transition-all duration-1000 ease-out ${
+                isActive
+                  ? "border-blue-400 ring-2 ring-blue-200 shadow-md scale-[1.01]"
+                  : "border-neutral-200 shadow-sm"
+              }`}
+            >
+              <div className="relative w-full aspect-square bg-neutral-100">
+                {coverPhoto && (
+                  <img
+                    src={coverPhoto}
+                    alt={pin.caption || pin.location_name || "Pin photo"}
+                    className="w-full aspect-square object-cover flex-shrink-0"
+                  />
+                )}
+                {photoCount > 1 && (
+                  <span className="absolute top-2 right-2 text-[11px] font-medium bg-black/60 text-white px-1.5 py-0.5 rounded-full">
+                    1/{photoCount}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-4 flex flex-col gap-2 min-h-[60px] items-start w-full">
+                <p className="text-sm text-neutral-700 leading-snug text-left">
+                  <span className="font-medium text-blue-600">
+                    {user?.email}
+                  </span>
+                  {pin.caption && (
+                    <span className="text-neutral-600">: {pin.caption}</span>
+                  )}
+                </p>
+                <span className="text-[11px] text-neutral-400 mt-auto text-left">
+                  Added {formatDate(pin.created_at)} at{" "}
+                  {formatTime(pin.created_at)}
+                </span>
+              </div>
             </div>
-            <div>Caption: {pin.caption}</div>
-            <div>Location: {pin.location_name}</div>
-            <div>Visited On: {pin.visited_at}</div>
-            <div>Created On: {pin.created_at}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {isModalOpen && <PinUploadModal toggleModal={toggleModal} />}
     </div>

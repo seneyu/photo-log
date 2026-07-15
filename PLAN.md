@@ -16,7 +16,7 @@
 
 ## Phase 3 — Social Interactions & Interface Sync
 
-- [ ] Zustand store for `activePinId` — clicking a map marker scrolls the feed card into view
+- [x] Zustand store for `activePinId` — clicking a map marker scrolls the feed card into view
 - [ ] Dynamic slide-out drawers showing high-res media and comments
 - [ ] Comment threads powered by Supabase Realtime WebSocket subscriptions for live feedback
 - [ ] Follow/unfollow system with "Following" feed filter and follower counts on profiles

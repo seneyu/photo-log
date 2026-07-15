@@ -20,10 +20,21 @@ export const defaultInitState: MapUiState = {
 // the Vanilla Factory Function
 // gets called inside the React Provider to spin up a completely isolated state instance
 export const createMapStore = (initState: MapUiState = defaultInitState) => {
-  return createStore<MapStore>()((set) => ({
+  return createStore<MapStore>()((set, get) => ({
     ...initState,
 
     // action implementations
-    setActivePinId: (id) => set({ activePinId: id }),
+    setActivePinId: (id) => {
+      set({ activePinId: id });
+
+      // if id, scheudle it to automatically clear
+      if (id) {
+        setTimeout(() => {
+          if (get().activePinId === id) {
+            set({ activePinId: null });
+          }
+        }, 1500);
+      }
+    },
   }));
 };
