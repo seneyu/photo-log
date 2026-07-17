@@ -5,6 +5,8 @@ import PinUploadModal from "./pin-upload-modal";
 import { Pin } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import { useMapStore } from "@/providers/map-store-provider";
+import PinDetailDrawer from "./pin-detail-drawer";
+import { formatDate, formatTime } from "@/lib/utils";
 
 export default function Feedpanel({
   user,
@@ -14,11 +16,12 @@ export default function Feedpanel({
   pins: Pin[];
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [detailPinId, setDetailPinId] = useState<string | null>(null);
   const activePinId = useMapStore((state) => state.activePinId);
   const cardRefs = useRef<Record<string, HTMLDivElement>>({});
 
   const toggleModal = () => {
-    setIsModalOpen((prev) => !prev);
+    setIsModalOpen(!isModalOpen);
   };
 
   useEffect(() => {
@@ -29,22 +32,7 @@ export default function Feedpanel({
     }
   }, [activePinId]);
 
-  const formatDate = (value: string | null) => {
-    if (!value) return "";
-    return new Date(value).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (value: string | null) => {
-    if (!value) return "";
-    return new Date(value).toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const detailPin = pins.find((pin) => pin.id === detailPinId) ?? null;
 
   return (
     <div className="flex h-full w-2/5 flex-col border-l bg-neutral-50 min-h-0">
@@ -68,7 +56,10 @@ export default function Feedpanel({
                   : "border-neutral-200 shadow-sm"
               }`}
             >
-              <div className="relative w-full aspect-square bg-neutral-100">
+              <div
+                className="relative w-full aspect-square bg-neutral-100 cursor-pointer"
+                onClick={() => setDetailPinId(pin.id)}
+              >
                 {coverPhoto && (
                   <img
                     src={coverPhoto}
@@ -102,6 +93,13 @@ export default function Feedpanel({
         })}
       </div>
       {isModalOpen && <PinUploadModal toggleModal={toggleModal} />}
+      {detailPin && (
+        <PinDetailDrawer
+          pin={detailPin}
+          user={user}
+          onClose={() => setDetailPinId(null)}
+        />
+      )}
     </div>
   );
 }
