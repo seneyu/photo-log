@@ -88,9 +88,18 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
     };
   }, [pins, setActivePinId]);
 
+  const handleLocationSelect = (coordinates: [number, number]) => {
+    mapRef.current?.flyTo({
+      center: coordinates,
+      essential: true,
+      zoom: 10,
+      speed: 0.8,
+    });
+  };
+
   return (
     <div className="relative h-full overflow-hidden">
-      <SearchBoxComponent />
+      <SearchBoxComponent onLocationSelect={handleLocationSelect} />
       <div id="map" ref={mapContainerRef} style={{ height: "100%" }}></div>
     </div>
   );
