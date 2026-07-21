@@ -17,10 +17,11 @@
 ## Phase 3 — Social Interactions & Interface Sync
 
 - [x] Zustand store for `activePinId` — clicking a map marker scrolls the feed card into view
-- [ ] Dynamic slide-out drawers showing high-res media and comments
+- [x] Dynamic slide-out drawers showing high-res media and comments
 - [ ] Comment threads powered by Supabase Realtime WebSocket subscriptions for live feedback
-- [ ] Follow/unfollow system with "Following" feed filter and follower counts on profiles
-- [ ] User profile pages showing a grid of their specific photo contributions
+- [ ] User search bar → profile pages showing a grid of their photo contributions
+- [ ] Follow/unfollow system with follower counts on profiles
+- [ ] "Following" filter on feed and map (marker color distinguishes yours vs. theirs)
 
 ## Phase 4 — Optimization & Deployment
 

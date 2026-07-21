@@ -58,7 +58,9 @@ export default function Feedpanel({
             >
               <div
                 className="relative w-full aspect-square bg-neutral-100 cursor-pointer"
-                onClick={() => setDetailPinId(pin.id)}
+                onClick={() => {
+                  setDetailPinId(pin.id);
+                }}
               >
                 {coverPhoto && (
                   <img
