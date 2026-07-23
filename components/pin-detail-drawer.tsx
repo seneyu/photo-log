@@ -20,6 +20,7 @@ export default function PinDetailDrawer({
   const [commentText, setCommentText] = useState("");
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currIndex, setCurrIndex] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -60,6 +61,14 @@ export default function PinDetailDrawer({
     setIsSubmitting(false);
   };
 
+  const handlePrev = () => {
+    setCurrIndex((prev) => (prev === 0 ? pin.photo_urls.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrIndex((prev) => (prev === pin.photo_urls.length - 1 ? 0 : prev + 1));
+  };
+
   return (
     <>
       {/* backdrop */}
@@ -77,13 +86,50 @@ export default function PinDetailDrawer({
         </div>
 
         {/* photos */}
-        <div className="w-full h-[55vh] bg-neutral-800 flex items-center justify-center shrink-0">
-          {pin.photo_urls[0] && (
-            <img
-              src={pin.photo_urls[0]}
-              alt={pin.caption || pin.location_name || "Pin photo"}
-              className="max-w-full max-h-full object-contain"
-            />
+        <div className="relative w-full h-[55vh] bg-neutral-800 overflow-hidden shrink-0">
+          {pin.photo_urls.map((url, i) => (
+            <div
+              key={url}
+              className={`absolute inset-0 flex justify-center items-center ${i === currIndex ? "block" : "hidden"}`}
+            >
+              <img
+                src={url}
+                alt={`${pin.caption}` || `${pin.location_name}` || "Pin photo"}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          ))}
+
+          {/* carousel buttons */}
+          {pin.photo_urls.length > 1 && (
+            <>
+              <button
+                onClick={handlePrev}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+              >
+                &#10094;
+              </button>
+              <button
+                onClick={handleNext}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+              >
+                &#10095;
+              </button>
+
+              {/* dot indicators */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {pin.photo_urls.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrIndex(i)}
+                    aria-label={`Go to photo ${i + 1}`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currIndex ? "bg-white" : "bg-white/40"} hover:cursor-pointer`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
