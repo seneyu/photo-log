@@ -14,16 +14,24 @@
 - [x] Fast client-side pin rendering with Mapbox default marker styles
 - [x] `createPin` Server Action to handle file storage uploads and database row writes
 
-## Phase 3 — Social Interactions & Interface Sync
+## Phase 3 — Interface Sync & Comments
 
-- [ ] Zustand store for `activePinId` — clicking a map marker scrolls the feed card into view
-- [ ] Dynamic slide-out drawers showing high-res media and comments
-- [ ] Comment threads powered by Supabase Realtime WebSocket subscriptions for live feedback
-- [ ] Follow/unfollow system with "Following" feed filter and follower counts on profiles
-- [ ] User profile pages showing a grid of their specific photo contributions
+- [x] Zustand store for `activePinId` — clicking a map marker scrolls the feed card into view
+- [x] Dynamic slide-out drawers showing high-res media and comments
+- [x] `createComment` Server Action - insert + return joined row, optimistic append
 
-## Phase 4 — Optimization & Deployment
+## Phase 4 — Polish & Deployment
 
 - [ ] Loading skeletons, empty state UI components, and mobile-responsive layout adjustments
 - [ ] Next.js image optimization using native Supabase Storage URL resizing parameters
 - [ ] Final deployment on Vercel connected to your production Supabase database instance
+
+**MVP done when:** the app is live at a real URL, a fresh visitor can sign up, drop a pin with a photo, see it on the map, open it, and comment with no broken empty/loading states along the way.
+
+---
+
+## Post-MVP / Stretch
+
+- [ ] User search bar → profile pages showing a grid of their photo contributions
+- [ ] Follow/unfollow system with follower counts on profiles
+- [ ] "Following" filter on feed and map (marker color distinguishes yours vs. theirs)
