@@ -4,8 +4,9 @@ import { Pin, CommentWithProfile } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { X } from "lucide-react";
+import { X, SquarePen } from "lucide-react";
 import { createComment } from "@/lib/actions/comments";
+import LocationSearchInput, { LocationResult } from "./location-search-input";
 
 export default function PinDetailDrawer({
   pin,
@@ -21,6 +22,13 @@ export default function PinDetailDrawer({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currIndex, setCurrIndex] = useState(0);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCaption, setEditCaption] = useState(pin.caption ?? "");
+  const [editCoordinates, setEditCoordinates] = useState<LocationResult | null>(
+    null,
+  );
+  const [editVisitedAt, setEditVisitedAt] = useState(pin.visited_at ?? "");
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,6 +77,8 @@ export default function PinDetailDrawer({
     setCurrIndex((prev) => (prev === pin.photo_urls.length - 1 ? 0 : prev + 1));
   };
 
+  const handleSave = () => {};
+
   return (
     <>
       {/* backdrop */}
@@ -77,12 +87,20 @@ export default function PinDetailDrawer({
       <div className="fixed top-0 right-0 h-full w-1/2 max-w-[600px] bg-white shadow-2xl z-50 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <span className="font-medium text-neutral-900">{user?.email}</span>
-          <button
-            onClick={onClose}
-            className="p-1 cursor-pointer text-zinc-400 hover:text-black"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-black"
+            >
+              <SquarePen size={20} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-black"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* photos */}
@@ -135,16 +153,54 @@ export default function PinDetailDrawer({
 
         {/* details */}
         <div className="p-4 border-b shrink-0">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-neutral-900">
-              {pin.location_name}
-            </h3>
-            <span className="text-xs text-neutral-400">
-              Visited {formatDate(pin.visited_at)}
-            </span>
-          </div>
-          {pin.caption && (
-            <p className="text-sm text-neutral-600 mt-1">{pin.caption}</p>
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <LocationSearchInput
+                initialValue={pin.location_name ?? ""}
+                onSelect={({ lat, lng, location_name }) => {
+                  setEditCoordinates({ lat, lng, location_name });
+                }}
+              />
+              <input
+                type="date"
+                value={editVisitedAt}
+                onChange={(e) => setEditVisitedAt(e.target.value)}
+                className="border px-3 py-2 text-sm"
+              />
+              <textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                className="border px-3 py-2 text-sm resize-none"
+              />
+              <div className="flex gap-4 justify-end">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-sm text-zinc-500 hover:cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="text-sm bg-black text-white px-4 py-2 rounded-full bg-black/50 hover:bg-black hover:cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-neutral-900">
+                  {pin.location_name}
+                </h3>
+                <span className="text-xs text-neutral-400">
+                  Visited {formatDate(pin.visited_at)}
+                </span>
+              </div>
+              {pin.caption && (
+                <p className="text-sm text-neutral-600 mt-1">{pin.caption}</p>
+              )}
+            </>
           )}
         </div>
 

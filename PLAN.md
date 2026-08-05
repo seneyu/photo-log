@@ -22,7 +22,8 @@
 
 ## Phase 4 — Polish & Deployment
 
-- [ ] Loading skeletons, empty state UI components, and mobile-responsive layout adjustments
+- [ ] `updatePin` Server Actions for MVP
+- [ ] Empty state UI components and mobile-responsive layout adjustments
 - [ ] Next.js image optimization using native Supabase Storage URL resizing parameters
 - [ ] Final deployment on Vercel connected to your production Supabase database instance
 
