@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { X, SquarePen } from "lucide-react";
 import { createComment } from "@/lib/actions/comments";
 import LocationSearchInput, { LocationResult } from "./location-search-input";
+import { updatePin } from "@/lib/actions/pins";
+import { useRouter } from "next/navigation";
 
 export default function PinDetailDrawer({
   pin,
@@ -29,6 +31,8 @@ export default function PinDetailDrawer({
     null,
   );
   const [editVisitedAt, setEditVisitedAt] = useState(pin.visited_at ?? "");
+
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -77,7 +81,22 @@ export default function PinDetailDrawer({
     setCurrIndex((prev) => (prev === pin.photo_urls.length - 1 ? 0 : prev + 1));
   };
 
-  const handleSave = () => {};
+  const handleSave = async () => {
+    const { success, error } = await updatePin(pin.id, {
+      caption: editCaption,
+      location_name: editCoordinates?.location_name ?? pin.location_name ?? "",
+      lat: editCoordinates?.lat ?? pin.lat,
+      lng: editCoordinates?.lng ?? pin.lng,
+      visited_at: editVisitedAt,
+    });
+
+    if (success) {
+      setIsEditing(false);
+      router.refresh(); // re-fetches pins server-side
+    } else {
+      console.error("Failed to update pin: ", error);
+    }
+  };
 
   return (
     <>

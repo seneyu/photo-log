@@ -1,3 +1,5 @@
+-- run this to set up the database from scratch
+
 -- TABLE profiles, extends auth.users, auto-created on signup via trigger
 CREATE TABLE profiles (
     id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -73,10 +75,11 @@ ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles_read_all" ON profiles FOR SELECT USING (true);
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE USING (auth.uid() = id);
 
--- pins: anyone can read, only owner can insert/delete
+-- pins: anyone can read, only owner can insert/delete/update
 CREATE POLICY "pins_read_all" ON pins FOR SELECT USING (true);
 CREATE POLICY "pins_insert_own" ON pins FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "pins_delete_own" ON pins FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "pins_update_own" ON public.pins FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- follows: read all, manage own rows
 CREATE POLICY "follows_read_all" ON follows FOR SELECT USING (true);
@@ -87,3 +90,13 @@ CREATE POLICY "follows_delete_own" ON follows FOR DELETE USING (auth.uid() = fol
 CREATE POLICY "comments_read_all" ON comments FOR SELECT USING (true);
 CREATE POLICY "comments_insert_auth" ON comments FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "comments_delete_own" ON comments FOR DELETE USING (auth.uid() = user_id);
+
+-- storage policy
+CREATE "Allow authenticated uploads" 
+ON storage.objects 
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'photo-uploads' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);

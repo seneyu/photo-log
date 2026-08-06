@@ -70,3 +70,46 @@ export async function createPin(formData: FormData) {
   revalidatePath("/map");
   return { success: true, error: "" };
 }
+
+export async function updatePin(
+  pinId: string,
+  updates: {
+    caption: string;
+    location_name: string;
+    lat: number;
+    lng: number;
+    visited_at: string;
+  },
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    console.error("Error in updatePin server action. No authenticated user.");
+    return { success: false, error: "Not authenticated." };
+  }
+
+  const { data, error } = await supabase
+    .from("pins")
+    .update({
+      caption: updates.caption,
+      location_name: updates.location_name,
+      lat: updates.lat,
+      lng: updates.lng,
+      visited_at: updates.visited_at,
+    })
+    .eq("id", pinId)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error in updatePin server action: ", error);
+    return { success: false, error: "Failed to update pin." };
+  }
+
+  return { success: true, error: "" };
+}

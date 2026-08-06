@@ -13,7 +13,8 @@ export default async function MapPage() {
   const { data: pins } = await supabase
     .from("pins")
     .select("*")
-    .eq("user_id", user?.id);
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false });
 
   return (
     <MapStoreProvider>
