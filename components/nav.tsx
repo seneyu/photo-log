@@ -7,14 +7,14 @@ export default function Nav({ toggleModal }: { toggleModal: () => void }) {
 
       <div className="flex items-center gap-4">
         <button
-          className="rounded-full bg-black px-4 py-1.5 text-sm text-white hover:bg-zinc-700"
+          className="rounded-full bg-black px-4 py-1.5 text-sm text-white hover:bg-zinc-700 hover:cursor-pointer"
           onClick={toggleModal}
         >
           + Add Pin
         </button>
         <button
           onClick={signOut}
-          className="rounded-full border-1 border-grey-500 px-5 py-1.5 text-sm text-zinc-500 hover:text-black"
+          className="rounded-full border-1 border-grey-500 px-5 py-1.5 text-sm text-zinc-500 hover:text-black hover:cursor-pointer"
         >
           Sign out
         </button>

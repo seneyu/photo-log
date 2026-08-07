@@ -140,7 +140,7 @@ export default function PinUploadModal({
             <button
               type="submit"
               className="rounded-full border border-zinc-300 bg-white px-8 py-1.5 text-sm text-zinc-500 cursor-not-allowed enabled:cursor-pointer enabled:border-black enabled:bg-black enabled:text-white enabled:hover:bg-zinc-700"
-              disabled={!coordinates || !location || !validFiles || !visitDate}
+              disabled={!coordinates || !validFiles.length || !visitDate}
             >
               Post
             </button>

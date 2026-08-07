@@ -4,11 +4,12 @@ import { Pin, CommentWithProfile } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { X, SquarePen, Trash } from "lucide-react";
+import { X, SquarePen, Trash, MessageCircleMore } from "lucide-react";
 import { createComment } from "@/lib/actions/comments";
 import LocationSearchInput, { LocationResult } from "./location-search-input";
 import { deletePin, updatePin } from "@/lib/actions/pins";
 import { useRouter } from "next/navigation";
+import EmptyState from "./empty-state";
 
 export default function PinDetailDrawer({
   pin,
@@ -204,18 +205,24 @@ export default function PinDetailDrawer({
                   setEditCoordinates({ lat, lng, location_name });
                 }}
               />
+              <label className="text-s font-medium text-zinc-700">
+                Visited On
+              </label>
               <input
                 type="date"
                 value={editVisitedAt}
                 onChange={(e) => setEditVisitedAt(e.target.value)}
                 className="border px-3 py-2 text-sm"
               />
+              <label className="text-s font-medium text-zinc-700">
+                Caption
+              </label>
               <textarea
                 value={editCaption}
                 onChange={(e) => setEditCaption(e.target.value)}
                 className="border px-3 py-2 text-sm resize-none"
               />
-              <div className="flex gap-4 justify-end">
+              <div className="flex mt-2 gap-4 justify-end">
                 <button
                   onClick={() => setIsEditing(false)}
                   className="text-sm text-zinc-500 hover:cursor-pointer"
@@ -250,11 +257,17 @@ export default function PinDetailDrawer({
         {/* comments */}
         {!isEditing && (
           <>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div
+              className={`flex-1 overflow-y-auto p-4 ${comments.length === 0 && "flex items-center justify-center"}`}
+            >
               {isLoadingComments ? (
                 <p className="text-sm text-neutral-400">Loading comments...</p>
               ) : comments.length === 0 ? (
-                <p className="text-sm text-neutral-400">No comments yet.</p>
+                <EmptyState
+                  size={60}
+                  icon={MessageCircleMore}
+                  title="No comments Yet"
+                />
               ) : (
                 <ul>
                   {comments.map((comment) => (
