@@ -4,10 +4,10 @@ import { Pin, CommentWithProfile } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { X, SquarePen } from "lucide-react";
+import { X, SquarePen, Trash } from "lucide-react";
 import { createComment } from "@/lib/actions/comments";
 import LocationSearchInput, { LocationResult } from "./location-search-input";
-import { updatePin } from "@/lib/actions/pins";
+import { deletePin, updatePin } from "@/lib/actions/pins";
 import { useRouter } from "next/navigation";
 
 export default function PinDetailDrawer({
@@ -98,6 +98,21 @@ export default function PinDetailDrawer({
     }
   };
 
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      "Delete this pin? This can't be undone.",
+    );
+    if (!confirmDelete) return;
+
+    const { success, error } = await deletePin(pin.id);
+    if (success) {
+      router.refresh();
+      onClose();
+    } else {
+      console.error("Failed to delete pin: ", error);
+    }
+  };
+
   return (
     <>
       {/* backdrop */}
@@ -106,12 +121,21 @@ export default function PinDetailDrawer({
       <div className="fixed top-0 right-0 h-full w-1/2 max-w-[600px] bg-white shadow-2xl z-50 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <span className="font-medium text-neutral-900">{user?.email}</span>
+
           <div className="flex gap-2">
             <button
               onClick={() => setIsEditing(true)}
               className="p-1 cursor-pointer text-zinc-400 hover:text-black"
+              aria-label="Edit pin"
             >
               <SquarePen size={20} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-red-600"
+              aria-label="Delete pin"
+            >
+              <Trash size={20} />
             </button>
             <button
               onClick={onClose}
@@ -224,46 +248,52 @@ export default function PinDetailDrawer({
         </div>
 
         {/* comments */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {isLoadingComments ? (
-            <p className="text-sm text-neutral-400">Loading comments...</p>
-          ) : comments.length === 0 ? (
-            <p className="text-sm text-neutral-400">No comments yet.</p>
-          ) : (
-            <ul>
-              {comments.map((comment) => (
-                <li key={comment.id} className="text-sm">
-                  <span className="font-medium text-neutral-900">
-                    @{comment.profiles?.username}{" "}
-                  </span>
-                  {/* <br /> */}
-                  <span className="text-neutral-600">{comment.content}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {!isEditing && (
+          <>
+            <div className="flex-1 overflow-y-auto p-4">
+              {isLoadingComments ? (
+                <p className="text-sm text-neutral-400">Loading comments...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-sm text-neutral-400">No comments yet.</p>
+              ) : (
+                <ul>
+                  {comments.map((comment) => (
+                    <li key={comment.id} className="text-sm">
+                      <span className="font-medium text-neutral-900">
+                        @{comment.profiles?.username}{" "}
+                      </span>
+                      {/* <br /> */}
+                      <span className="text-neutral-600">
+                        {comment.content}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-        {/* comments input */}
-        <form
-          onSubmit={handleSubmitComment}
-          className="border-t p-3 flex items-end gap-2 shrink-0"
-        >
-          <textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Add a comment..."
-            rows={1}
-            className="flex-1 resize-none border rounded-lg px-3 py-2 text-sm placeholder:text-zinc-400"
-          />
-          <button
-            type="submit"
-            disabled={!commentText.trim() || isSubmitting}
-            className="rounded-full bg-black text-white text-sm px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Post
-          </button>
-        </form>
+            {/* comments input */}
+            <form
+              onSubmit={handleSubmitComment}
+              className="border-t p-3 flex items-end gap-2 shrink-0"
+            >
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                rows={1}
+                className="flex-1 resize-none border rounded-lg px-3 py-2 text-sm placeholder:text-zinc-400"
+              />
+              <button
+                type="submit"
+                disabled={!commentText.trim() || isSubmitting}
+                className="rounded-full bg-black text-white text-sm px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Post
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </>
   );

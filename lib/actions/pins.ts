@@ -113,3 +113,31 @@ export async function updatePin(
 
   return { success: true, error: "" };
 }
+
+export async function deletePin(pinId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    console.error("Error in deletePin server action. No authenticated user.");
+    return { success: false, error: "Not authenticated." };
+  }
+
+  const { data, error } = await supabase
+    .from("pins")
+    .delete()
+    .eq("id", pinId)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error in deletePin server action: ", error);
+    return { success: false, error: "Failed to delete pin." };
+  }
+
+  return { success: true, error: "" };
+}
