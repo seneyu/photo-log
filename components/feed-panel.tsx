@@ -37,7 +37,7 @@ export default function Feedpanel({
   const detailPin = pins.find((pin) => pin.id === detailPinId) ?? null;
 
   return (
-    <div className="flex h-full w-2/5 flex-col border-l bg-neutral-50 min-h-0">
+    <div className="flex h-full md:w-2/5 flex-col border-l bg-neutral-50 min-h-0">
       <Nav toggleModal={toggleModal} />
       <div
         className={`flex-1 min-h-0 overflow-y-auto p-8 flex flex-col ${pins.length === 0 ? "items-center justify-center" : "items-center"}`}
@@ -55,7 +55,7 @@ export default function Feedpanel({
                   if (ele) cardRefs.current[pin.id] = ele;
                   else delete cardRefs.current[pin.id];
                 }}
-                className={`p-4 mb-6 w-[80%] flex-shrink-0 flex flex-col items-center rounded-lg transition-all duration-1000 ease-out ${
+                className={`p-4 mb-6 w-[90%] flex-shrink-0 flex flex-col items-center rounded-lg transition-all duration-1000 ease-out ${
                   isActive
                     ? "border-blue-400 ring-2 ring-blue-200 shadow-md scale-[1.01]"
                     : "border-neutral-200 shadow-sm"

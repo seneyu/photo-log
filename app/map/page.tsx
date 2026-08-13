@@ -20,7 +20,7 @@ export default async function MapPage() {
     <MapStoreProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Map - 60% */}
-        <div className="h-full w-3/4">
+        <div className="hidden md:block h-full w-3/5">
           <MapPanel pins={pins ?? []} />
         </div>
 

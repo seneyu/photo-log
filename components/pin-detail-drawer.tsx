@@ -119,7 +119,7 @@ export default function PinDetailDrawer({
       {/* backdrop */}
       <div onClick={onClose} className="fixed inset-0 bg-black/40 z-50" />
       {/* drawer */}
-      <div className="fixed top-0 right-0 h-full w-1/2 max-w-[600px] bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-0 h-full z-50 flex flex-col bg-white shadow-2xl transition-all duration-300 ease-out w-full lg:w-[700px]">
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <span className="font-medium text-neutral-900">{user?.email}</span>
 
@@ -168,14 +168,14 @@ export default function PinDetailDrawer({
               <button
                 onClick={handlePrev}
                 aria-label="Previous photo"
-                className="absolute left-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 cursor-pointer"
               >
                 &#10094;
               </button>
               <button
                 onClick={handleNext}
                 aria-label="Next photo"
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 cursor-pointer"
               >
                 &#10095;
               </button>
@@ -187,7 +187,7 @@ export default function PinDetailDrawer({
                     key={i}
                     onClick={() => setCurrIndex(i)}
                     aria-label={`Go to photo ${i + 1}`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currIndex ? "bg-white" : "bg-white/40"} hover:cursor-pointer`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currIndex ? "bg-white" : "bg-white/40"} cursor-pointer`}
                   />
                 ))}
               </div>
@@ -225,13 +225,13 @@ export default function PinDetailDrawer({
               <div className="flex mt-2 gap-4 justify-end">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="text-sm text-zinc-500 hover:cursor-pointer"
+                  className="text-sm text-zinc-500 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="text-sm bg-black text-white px-4 py-2 rounded-full bg-black/50 hover:bg-black hover:cursor-pointer"
+                  className="text-sm bg-black text-white px-4 py-2 rounded-full bg-black/50 hover:bg-black cursor-pointer"
                 >
                   Save
                 </button>
