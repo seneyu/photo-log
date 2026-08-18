@@ -10,6 +10,7 @@ import LocationSearchInput, { LocationResult } from "./location-search-input";
 import { deletePin, updatePin } from "@/lib/actions/pins";
 import { useRouter } from "next/navigation";
 import EmptyState from "./empty-state";
+import Image from "next/image";
 
 export default function PinDetailDrawer({
   pin,
@@ -154,10 +155,12 @@ export default function PinDetailDrawer({
               key={url}
               className={`absolute inset-0 flex justify-center items-center ${i === currIndex ? "block" : "hidden"}`}
             >
-              <img
+              <Image
                 src={url}
-                alt={`${pin.caption}` || `${pin.location_name}` || "Pin photo"}
-                className="max-w-full max-h-full object-contain"
+                alt={pin.caption || pin.location_name || "Pin photo"}
+                fill
+                sizes="(max-w-[768px]) 100vw, (max-w-[1200px]) 50vw, 600px"
+                className="object-contain"
               />
             </div>
           ))}

@@ -9,6 +9,7 @@ import PinDetailDrawer from "./pin-detail-drawer";
 import { formatDate, formatTime } from "@/lib/utils";
 import EmptyState from "./empty-state";
 import { Scroll } from "lucide-react";
+import Image from "next/image";
 
 export default function Feedpanel({
   user,
@@ -37,7 +38,7 @@ export default function Feedpanel({
   const detailPin = pins.find((pin) => pin.id === detailPinId) ?? null;
 
   return (
-    <div className="flex h-full md:w-2/5 flex-col border-l bg-neutral-50 min-h-0">
+    <div className="flex h-full w-full md:w-2/5 flex-col border-l bg-neutral-50 min-h-0">
       <Nav toggleModal={toggleModal} />
       <div
         className={`flex-1 min-h-0 overflow-y-auto p-8 flex flex-col ${pins.length === 0 ? "items-center justify-center" : "items-center"}`}
@@ -62,16 +63,19 @@ export default function Feedpanel({
                 }`}
               >
                 <div
-                  className="relative w-full aspect-square bg-neutral-100 cursor-pointer"
+                  className="relative w-full aspect-square bg-neutral-100 cursor-pointer overflow-hidden rounded-sm"
                   onClick={() => {
                     setDetailPinId(pin.id);
                   }}
                 >
                   {coverPhoto && (
-                    <img
+                    <Image
                       src={coverPhoto}
                       alt={pin.caption || pin.location_name || "Pin photo"}
-                      className="w-full aspect-square object-cover flex-shrink-0"
+                      fill
+                      sizes="(max-w-[768px]) 100vw, 400px"
+                      className="object-cover"
+                      priority={pin.id === pins[0]?.id}
                     />
                   )}
                   {photoCount > 1 && (

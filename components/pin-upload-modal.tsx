@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { createPin } from "@/lib/actions/pins";
 import LocationSearchInput from "./location-search-input";
 import { X } from "lucide-react";
+import imageCompression from "browser-image-compression";
 
 export default function PinUploadModal({
   toggleModal,
@@ -22,37 +23,77 @@ export default function PinUploadModal({
     location_name: string;
   } | null>(null);
 
-  // 10MB in bytes
-  const MAX_FILE_SIZE_BYTES = 10485760;
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const MAX_FILE_SIZE_BYTES = 10485760; // max per file 10MB (10 * 1024 * 1024)
+  const COMPRESSION_THRESHOLD_BYTES = 1048576; // threshold 1MB (1 * 1024 * 1024)
 
   // handle and validate file change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files ?? []);
     if (selectedFiles.length > 5) {
       window.alert("Do not select more than 5 images.");
-    } else {
-      const approvedFiles: File[] = [];
-      const errors: string[] = [];
-
-      selectedFiles.forEach((file) => {
-        if (!file.type.startsWith("image/")) {
-          errors.push(`${file.name} is not an image.`);
-        } else if (file.size > MAX_FILE_SIZE_BYTES) {
-          errors.push(`${file.name} exceeds 10MB.`);
-        } else {
-          approvedFiles.push(file);
-        }
-      });
-
-      setErrorMessage(errors.join(" "));
-      setValidFiles(approvedFiles);
+      return;
     }
+
+    setIsProcessing(true);
+    const errors: string[] = [];
+
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+
+    const processPromises = selectedFiles.map(async (file) => {
+      if (!file.type.startsWith("image/")) {
+        errors.push(`${file.name} is not an image.`);
+        return null;
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        errors.push(`${file.name} exceeds 10MB.`);
+        return null;
+      }
+
+      if (file.size > COMPRESSION_THRESHOLD_BYTES) {
+        try {
+          const compressedBlob = await imageCompression(file, options);
+          return new File([compressedBlob], file.name, {
+            type: file.type,
+            lastModified: Date.now(),
+          });
+        } catch (err) {
+          console.error(
+            "Compression processing failed, falling back to original files: ",
+            file.name,
+            err,
+          );
+          return file;
+        }
+      } else {
+        // skip lightweight files entirely
+        return file;
+      }
+    });
+
+    const processedFiles = await Promise.all(processPromises);
+    const approvedFiles = processedFiles.filter((file) => file !== null);
+
+    setErrorMessage(errors.join(" "));
+    setValidFiles(approvedFiles);
+    setIsProcessing(false);
   };
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isProcessing) return;
 
     const formData = new FormData(e.currentTarget); // reads current value of every 'name' attribute in <form> element
+
+    // delete uncompressed raw files and manually append optimized file from state container array
+    formData.delete("photo_files");
+    validFiles.forEach((file) => formData.append("photo_files", file));
 
     const { success, error } = await createPin(formData);
 
@@ -97,8 +138,14 @@ export default function PinUploadModal({
                 className="cursor-pointer text-sm text-zinc-500"
                 multiple
                 required
+                disabled={isProcessing}
                 onChange={handleFileChange}
               />
+              {isProcessing && (
+                <p className="text-xs text-blue-500 animate-pulse mt-1">
+                  Optimizing dimensions and crunching sizes...
+                </p>
+              )}
               {errorMessage && (
                 <p className="text-sm text-red-500">{errorMessage}</p>
               )}
@@ -142,7 +189,7 @@ export default function PinUploadModal({
               className="rounded-full border border-zinc-300 bg-white px-8 py-1.5 text-sm text-zinc-500 cursor-not-allowed enabled:cursor-pointer enabled:border-black enabled:bg-black enabled:text-white enabled:hover:bg-zinc-700"
               disabled={!coordinates || !validFiles.length || !visitDate}
             >
-              Post
+              {isProcessing ? "Processing..." : "Post"}
             </button>
           </div>
           {postErrorMessage && (
