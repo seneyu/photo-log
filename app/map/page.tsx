@@ -13,13 +13,14 @@ export default async function MapPage() {
   const { data: pins } = await supabase
     .from("pins")
     .select("*")
-    .eq("user_id", user?.id);
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false });
 
   return (
     <MapStoreProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Map - 60% */}
-        <div className="h-full w-3/4">
+        <div className="hidden md:block h-full w-3/5">
           <MapPanel pins={pins ?? []} />
         </div>
 

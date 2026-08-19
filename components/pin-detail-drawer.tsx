@@ -4,8 +4,13 @@ import { Pin, CommentWithProfile } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { X } from "lucide-react";
+import { X, SquarePen, Trash, MessageCircleMore } from "lucide-react";
 import { createComment } from "@/lib/actions/comments";
+import LocationSearchInput, { LocationResult } from "./location-search-input";
+import { deletePin, updatePin } from "@/lib/actions/pins";
+import { useRouter } from "next/navigation";
+import EmptyState from "./empty-state";
+import Image from "next/image";
 
 export default function PinDetailDrawer({
   pin,
@@ -21,6 +26,15 @@ export default function PinDetailDrawer({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currIndex, setCurrIndex] = useState(0);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCaption, setEditCaption] = useState(pin.caption ?? "");
+  const [editCoordinates, setEditCoordinates] = useState<LocationResult | null>(
+    null,
+  );
+  const [editVisitedAt, setEditVisitedAt] = useState(pin.visited_at ?? "");
+
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,20 +83,69 @@ export default function PinDetailDrawer({
     setCurrIndex((prev) => (prev === pin.photo_urls.length - 1 ? 0 : prev + 1));
   };
 
+  const handleSave = async () => {
+    const { success, error } = await updatePin(pin.id, {
+      caption: editCaption,
+      location_name: editCoordinates?.location_name ?? pin.location_name ?? "",
+      lat: editCoordinates?.lat ?? pin.lat,
+      lng: editCoordinates?.lng ?? pin.lng,
+      visited_at: editVisitedAt,
+    });
+
+    if (success) {
+      setIsEditing(false);
+      router.refresh(); // re-fetches pins server-side
+    } else {
+      console.error("Failed to update pin: ", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      "Delete this pin? This can't be undone.",
+    );
+    if (!confirmDelete) return;
+
+    const { success, error } = await deletePin(pin.id);
+    if (success) {
+      router.refresh();
+      onClose();
+    } else {
+      console.error("Failed to delete pin: ", error);
+    }
+  };
+
   return (
     <>
       {/* backdrop */}
       <div onClick={onClose} className="fixed inset-0 bg-black/40 z-50" />
       {/* drawer */}
-      <div className="fixed top-0 right-0 h-full w-1/2 max-w-[600px] bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-0 h-full z-50 flex flex-col bg-white shadow-2xl transition-all duration-300 ease-out w-full lg:w-[700px]">
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <span className="font-medium text-neutral-900">{user?.email}</span>
-          <button
-            onClick={onClose}
-            className="p-1 cursor-pointer text-zinc-400 hover:text-black"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-black"
+              aria-label="Edit pin"
+            >
+              <SquarePen size={20} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-red-600"
+              aria-label="Delete pin"
+            >
+              <Trash size={20} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 cursor-pointer text-zinc-400 hover:text-black"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* photos */}
@@ -92,10 +155,12 @@ export default function PinDetailDrawer({
               key={url}
               className={`absolute inset-0 flex justify-center items-center ${i === currIndex ? "block" : "hidden"}`}
             >
-              <img
+              <Image
                 src={url}
-                alt={`${pin.caption}` || `${pin.location_name}` || "Pin photo"}
-                className="max-w-full max-h-full object-contain"
+                alt={pin.caption || pin.location_name || "Pin photo"}
+                fill
+                sizes="(max-w-[768px]) 100vw, (max-w-[1200px]) 50vw, 600px"
+                className="object-contain"
               />
             </div>
           ))}
@@ -106,14 +171,14 @@ export default function PinDetailDrawer({
               <button
                 onClick={handlePrev}
                 aria-label="Previous photo"
-                className="absolute left-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 cursor-pointer"
               >
                 &#10094;
               </button>
               <button
                 onClick={handleNext}
                 aria-label="Next photo"
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 hover:cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex justify-center items-center text-white w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 cursor-pointer"
               >
                 &#10095;
               </button>
@@ -125,7 +190,7 @@ export default function PinDetailDrawer({
                     key={i}
                     onClick={() => setCurrIndex(i)}
                     aria-label={`Go to photo ${i + 1}`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currIndex ? "bg-white" : "bg-white/40"} hover:cursor-pointer`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currIndex ? "bg-white" : "bg-white/40"} cursor-pointer`}
                   />
                 ))}
               </div>
@@ -135,60 +200,116 @@ export default function PinDetailDrawer({
 
         {/* details */}
         <div className="p-4 border-b shrink-0">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-neutral-900">
-              {pin.location_name}
-            </h3>
-            <span className="text-xs text-neutral-400">
-              Visited {formatDate(pin.visited_at)}
-            </span>
-          </div>
-          {pin.caption && (
-            <p className="text-sm text-neutral-600 mt-1">{pin.caption}</p>
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <LocationSearchInput
+                initialValue={pin.location_name ?? ""}
+                onSelect={({ lat, lng, location_name }) => {
+                  setEditCoordinates({ lat, lng, location_name });
+                }}
+              />
+              <label className="text-s font-medium text-zinc-700">
+                Visited On
+              </label>
+              <input
+                type="date"
+                value={editVisitedAt}
+                onChange={(e) => setEditVisitedAt(e.target.value)}
+                className="border px-3 py-2 text-sm"
+              />
+              <label className="text-s font-medium text-zinc-700">
+                Caption
+              </label>
+              <textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                className="border px-3 py-2 text-sm resize-none"
+              />
+              <div className="flex mt-2 gap-4 justify-end">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-sm text-zinc-500 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="text-sm bg-black text-white px-4 py-2 rounded-full bg-black/50 hover:bg-black cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-neutral-900">
+                  {pin.location_name}
+                </h3>
+                <span className="text-xs text-neutral-400">
+                  Visited {formatDate(pin.visited_at)}
+                </span>
+              </div>
+              {pin.caption && (
+                <p className="text-sm text-neutral-600 mt-1">{pin.caption}</p>
+              )}
+            </>
           )}
         </div>
 
         {/* comments */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {isLoadingComments ? (
-            <p className="text-sm text-neutral-400">Loading comments...</p>
-          ) : comments.length === 0 ? (
-            <p className="text-sm text-neutral-400">No comments yet.</p>
-          ) : (
-            <ul>
-              {comments.map((comment) => (
-                <li key={comment.id} className="text-sm">
-                  <span className="font-medium text-neutral-900">
-                    @{comment.profiles?.username}{" "}
-                  </span>
-                  {/* <br /> */}
-                  <span className="text-neutral-600">{comment.content}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {!isEditing && (
+          <>
+            <div
+              className={`flex-1 overflow-y-auto p-4 ${comments.length === 0 && "flex items-center justify-center"}`}
+            >
+              {isLoadingComments ? (
+                <p className="text-sm text-neutral-400">Loading comments...</p>
+              ) : comments.length === 0 ? (
+                <EmptyState
+                  size={60}
+                  icon={MessageCircleMore}
+                  title="No comments Yet"
+                />
+              ) : (
+                <ul>
+                  {comments.map((comment) => (
+                    <li key={comment.id} className="text-sm">
+                      <span className="font-medium text-neutral-900">
+                        @{comment.profiles?.username}{" "}
+                      </span>
+                      {/* <br /> */}
+                      <span className="text-neutral-600">
+                        {comment.content}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-        {/* comments input */}
-        <form
-          onSubmit={handleSubmitComment}
-          className="border-t p-3 flex items-end gap-2 shrink-0"
-        >
-          <textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Add a comment..."
-            rows={1}
-            className="flex-1 resize-none border rounded-lg px-3 py-2 text-sm placeholder:text-zinc-400"
-          />
-          <button
-            type="submit"
-            disabled={!commentText.trim() || isSubmitting}
-            className="rounded-full bg-black text-white text-sm px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Post
-          </button>
-        </form>
+            {/* comments input */}
+            <form
+              onSubmit={handleSubmitComment}
+              className="border-t p-3 flex items-end gap-2 shrink-0"
+            >
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                rows={1}
+                className="flex-1 resize-none border rounded-lg px-3 py-2 text-sm placeholder:text-zinc-400"
+              />
+              <button
+                type="submit"
+                disabled={!commentText.trim() || isSubmitting}
+                className="rounded-full bg-black text-white text-sm px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Post
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </>
   );
