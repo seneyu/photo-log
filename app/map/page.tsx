@@ -1,7 +1,8 @@
-import MapPanel from "@/components/map-panel";
 import Feedpanel from "@/components/feed-panel";
 import { createClient } from "@/lib/supabase/server";
 import { MapStoreProvider } from "@/providers/map-store-provider";
+import { headers } from "next/headers";
+import MapPanel from "@/components/map-panel-client";
 
 export default async function MapPage() {
   const supabase = await createClient();
@@ -16,13 +17,20 @@ export default async function MapPage() {
     .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
+  // read the user-agent in headers to detect mobile device
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get("user-agent") || "";
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(userAgent);
+
   return (
     <MapStoreProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Map - 60% */}
-        <div className="hidden md:block h-full w-3/5">
-          <MapPanel pins={pins ?? []} />
-        </div>
+        {!isMobile && (
+          <div className="hidden md:block w-full w-3/5">
+            <MapPanel pins={pins ?? []} />
+          </div>
+        )}
 
         {/* Feed column - 40% */}
         <Feedpanel user={user} pins={pins ?? []} />

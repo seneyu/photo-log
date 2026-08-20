@@ -73,7 +73,7 @@ export default function Feedpanel({
                       src={coverPhoto}
                       alt={pin.caption || pin.location_name || "Pin photo"}
                       fill
-                      sizes="(max-w-[768px]) 100vw, 400px"
+                      sizes="(max-w-md) 90vw, 400px"
                       className="object-cover"
                       priority={pin.id === pins[0]?.id}
                     />
