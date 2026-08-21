@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { signInWithGithub } from "@/lib/actions/auth";
+import { signUp, signInWithGithub } from "@/lib/actions/auth";
 
 export default async function Signup({
   searchParams,
@@ -10,33 +8,12 @@ export default async function Signup({
 }) {
   const { error: errorParam, message } = await searchParams;
 
-  async function signUp(formData: FormData) {
-    "use server";
-
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
-      },
-    });
-
-    if (error) {
-      console.log("signup error: ", JSON.stringify(error));
-      redirect(
-        `/signup?error=${encodeURIComponent(error.message ?? JSON.stringify(error))}`,
-      );
-    }
-    redirect("/signup?message=Check your email to confirm your account");
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-8 shadow-sm dark:bg-zinc-900">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome to Photo Hub
+            Welcome to Photo Log
           </h1>
           <p className="text-sm text-zinc-500">
             Create an account to start sharing photos
@@ -78,7 +55,9 @@ export default async function Signup({
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-900">or</span>
+            <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-900">
+              or
+            </span>
           </div>
         </div>
 

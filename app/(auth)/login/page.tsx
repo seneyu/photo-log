@@ -1,7 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { signInWithGithub } from "@/lib/actions/auth";
+import { login, signInWithGithub } from "@/lib/actions/auth";
 
 export default async function Login({
   searchParams,
@@ -9,25 +7,6 @@ export default async function Login({
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const { error: errorParam, message } = await searchParams;
-
-  async function login(formData: FormData) {
-    "use server";
-
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    });
-
-    if (error) {
-      console.log("login error: ", JSON.stringify(error));
-      redirect(
-        `/login?error=${encodeURIComponent(error.message ?? JSON.stringify(error))}`,
-      );
-    }
-
-    redirect("/map");
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
@@ -37,7 +16,7 @@ export default async function Login({
             Welcome back
           </h1>
           <p className="text-sm text-zinc-500">
-            Log in to your Photo Hub account
+            Log in to your Photo Log account
           </p>
         </div>
 
@@ -76,7 +55,9 @@ export default async function Login({
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-900">or</span>
+            <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-900">
+              or
+            </span>
           </div>
         </div>
 

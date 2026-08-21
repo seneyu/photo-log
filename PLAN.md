@@ -1,4 +1,4 @@
-# Photo Hub — Todo List
+# Photo Log — Todo List
 
 ## Phase 1 — Foundation & Authentication
 
@@ -25,7 +25,7 @@
 - [x] `updatePin` and `deletePin` Server Actions for MVP
 - [x] Empty state UI components and mobile-responsive layout adjustments
 - [x] Client-side compression before image upload
-- [ ] Final deployment on Vercel connected to your production Supabase database instance
+- [x] Final deployment on Vercel connected to your production Supabase database instance
 
 **MVP done when:** the app is live at a real URL, a fresh visitor can sign up, drop a pin with a photo, see it on the map, open it, and comment with no broken empty/loading states along the way.
 

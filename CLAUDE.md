@@ -1,4 +1,4 @@
-# Photo Hub
+# Photo Log
 
 A geotag photo sharing application built as a full-stack MVP across four development phases. The project demonstrates a production-grade serverless architecture using Next.js 14 App Router, Supabase, and Mapbox — with a focus on real-time data, RLS-enforced data access, and a polished split-view map interface.
 

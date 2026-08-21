@@ -4,7 +4,7 @@ import { LogOut, CirclePlus } from "lucide-react";
 export default function Nav({ toggleModal }: { toggleModal: () => void }) {
   return (
     <nav className="flex items-center justify-between border-b px-4 md:px-8 py-3 w-full">
-      <h1 className="text-xl font-semibold pr-2">Photo Hub</h1>
+      <h1 className="text-xl font-semibold pr-2">Photo Log</h1>
 
       <div className="flex items-center gap-4">
         <button

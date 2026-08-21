@@ -1,16 +1,21 @@
 import Link from "next/link";
 
-export default function AuthCodeError() {
+export default async function AuthCodeError({
+  searchParams,
+}: {
+  searchParams: Promise<{ reason?: string }>;
+}) {
+  const { reason } = await searchParams;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-8 shadow-sm dark:bg-zinc-900">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Confirmation link expired
+            Sign-in failed
           </h1>
           <p className="text-sm text-zinc-500">
-            This link is invalid or has already been used. Please sign up again
-            to receive a new confirmation email.
+            {reason ?? "This link is invalid or has already been used."}
           </p>
         </div>
 

@@ -23,9 +23,11 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
   // creates new mapboxgl map on mount and attaches to mapContainerRef
   // using token to authenticates with mapbox's servers
   useEffect(() => {
+    if (!mapContainerRef.current) return;
+
     mapRef.current = new mapboxgl.Map({
       accessToken: `${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
-      container: mapContainerRef.current!,
+      container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/standard",
       center: [105, 30],
       zoom: 2,
