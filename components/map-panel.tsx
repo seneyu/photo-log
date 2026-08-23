@@ -33,10 +33,12 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
       zoom: 2,
     });
 
+    mapRef.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+
     return () => mapRef.current?.remove();
   }, []);
 
-  // reacts to pins change - add markers and fitBounds
+  // reacts to pins change - add markers
   useEffect(() => {
     const currentMap = mapRef.current;
     if (!currentMap) return;
@@ -49,7 +51,13 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
     // maintain array of markers and cleanup functions
     const activeMarkers: mapboxgl.Marker[] = [];
     const cleanups: Array<() => void> = [];
-    const bounds = new mapboxgl.LngLatBounds();
+
+    const mostRecentPin = pins[0];
+    currentMap.flyTo({
+      center: [mostRecentPin.lng, mostRecentPin.lat],
+      zoom: 10,
+      essential: true,
+    });
 
     pins.forEach((pin) => {
       const newMarker = new mapboxgl.Marker()
@@ -57,7 +65,6 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
         .addTo(currentMap);
 
       activeMarkers.push(newMarker);
-      bounds.extend([pin.lng, pin.lat]);
 
       const markerElement = newMarker.getElement();
 
@@ -79,9 +86,6 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
         markerElement.removeEventListener("click", handleMarkerClick);
       });
     });
-
-    // fit map viewport around generated bounds
-    currentMap.fitBounds(bounds, { padding: 250, maxZoom: 10 });
 
     // cleanup phase - remove markers and events when pins array change
     return () => {
