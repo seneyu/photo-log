@@ -67,6 +67,8 @@ export async function createPin(formData: FormData) {
     return { success: false, error: "Failed to save data." };
   }
 
+  // revalidatePath in server actions clears database cache
+  // and forces an immediate server-side re-render of the updated path
   revalidatePath("/map");
   return { success: true, error: "" };
 }
@@ -102,15 +104,16 @@ export async function updatePin(
       visited_at: updates.visited_at,
     })
     .eq("id", pinId)
-    .eq("user_id", user.id)
-    .select()
-    .single();
+    .eq("user_id", user.id);
+  // .select()
+  // .single();
 
   if (error) {
     console.error("Error in updatePin server action: ", error);
     return { success: false, error: "Failed to update pin." };
   }
 
+  revalidatePath("/map");
   return { success: true, error: "" };
 }
 
@@ -130,14 +133,55 @@ export async function deletePin(pinId: string) {
     .from("pins")
     .delete()
     .eq("id", pinId)
-    .eq("user_id", user.id)
-    .select()
-    .single();
+    .eq("user_id", user.id);
+  // .select()
+  // .single();
 
   if (error) {
     console.error("Error in deletePin server action: ", error);
     return { success: false, error: "Failed to delete pin." };
   }
 
+  revalidatePath("/map");
   return { success: true, error: "" };
+}
+
+export async function fetchMorePins(
+  nextCursorId: string,
+  nextCursorCreatedAt: string,
+  limit: number,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    console.error("Error in deletePin server action. No authenticated user.");
+    return { success: false, error: "Not authenticated." };
+  }
+
+  // fetches records where created_at is older than the cursor
+  // OR where created_at matches the cursor exactly but the id is smaller
+  const { data, error } = await supabase
+    .from("pins")
+    .select("*")
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false })
+    .or(
+      `created_at.lt.${nextCursorCreatedAt},and(created_at.eq.${nextCursorCreatedAt},id.lt.${nextCursorId})`,
+    )
+    .limit(limit);
+
+  const nextCursor = data?.length === limit ? data[data.length - 1].id : null;
+  const nextCreatedAt =
+    data?.length === limit ? data[data.length - 1].created_at : null;
+
+  if (error) {
+    console.error("Error in fetchMorePins server action: ", error);
+    return { success: false, error: "Failed to fetch more pins." };
+  }
+
+  return { success: true, data, nextCursor, nextCreatedAt, error: "" };
 }

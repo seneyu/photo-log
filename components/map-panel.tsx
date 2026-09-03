@@ -5,16 +5,20 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import * as mapboxgl from "mapbox-gl/esm";
 
 import dynamic from "next/dynamic";
-import { Pin } from "@/lib/types";
+import { MapPin } from "@/lib/types";
 
 import { useMapStore } from "@/providers/map-store-provider";
+
+interface MapPanelProps {
+  pins: MapPin[];
+}
 
 // @mapbox/search-js-react accesses `document` on import — must be loaded client-side only
 const SearchBoxComponent = dynamic(() => import("@/components/search-box"), {
   ssr: false,
 });
 
-export default function MapGL({ pins }: { pins: Pin[] }) {
+export default function MapGL({ pins }: MapPanelProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
 

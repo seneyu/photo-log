@@ -29,6 +29,11 @@
 
 **MVP done when:** the app is live at a real URL, a fresh visitor can sign up, drop a pin with a photo, see it on the map, open it, and comment with no broken empty/loading states along the way.
 
+## Phase 5 - Performance & Testing
+
+- [x] Infinite scroll for feed panel to reduce initial page load
+- [ ] Testing and CI
+
 ---
 
 ## Post-MVP / Stretch
