@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Pin, CommentWithProfile } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getTodaysDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { X, SquarePen, Trash, MessageCircleMore } from "lucide-react";
@@ -94,7 +94,7 @@ export default function PinDetailDrawer({
 
     if (success) {
       setIsEditing(false);
-      router.refresh(); // re-fetches pins server-side
+      router.refresh(); // tells browser to fetch fresh data from the server
     } else {
       console.error("Failed to update pin: ", error);
     }
@@ -108,7 +108,7 @@ export default function PinDetailDrawer({
 
     const { success, error } = await deletePin(pin.id);
     if (success) {
-      router.refresh();
+      router.refresh(); // tells browser to fetch fresh data from the server
       onClose();
     } else {
       console.error("Failed to delete pin: ", error);
@@ -215,6 +215,7 @@ export default function PinDetailDrawer({
                 type="date"
                 value={editVisitedAt}
                 onChange={(e) => setEditVisitedAt(e.target.value)}
+                max={getTodaysDate()}
                 className="border px-3 py-2 text-sm"
               />
               <label className="text-s font-medium text-zinc-700">
@@ -269,21 +270,28 @@ export default function PinDetailDrawer({
                 <EmptyState
                   size={60}
                   icon={MessageCircleMore}
-                  title="No comments Yet"
+                  title="No Comments Yet"
                 />
               ) : (
                 <ul>
-                  {comments.map((comment) => (
-                    <li key={comment.id} className="text-sm">
-                      <span className="font-medium text-neutral-900">
-                        @{comment.profiles?.username}{" "}
-                      </span>
-                      {/* <br /> */}
-                      <span className="text-neutral-600">
-                        {comment.content}
-                      </span>
-                    </li>
-                  ))}
+                  {comments.map((comment) => {
+                    const rawUsername =
+                      comment.profiles?.username || "anonymous";
+                    const cleanUsername = rawUsername.includes("_")
+                      ? rawUsername.split("_")[0]
+                      : rawUsername;
+
+                    return (
+                      <li key={comment.id} className="text-sm">
+                        <span className="font-medium text-neutral-900">
+                          @{cleanUsername}{" "}
+                        </span>
+                        <span className="text-neutral-600">
+                          {comment.content}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

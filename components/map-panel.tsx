@@ -5,16 +5,20 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import * as mapboxgl from "mapbox-gl/esm";
 
 import dynamic from "next/dynamic";
-import { Pin } from "@/lib/types";
+import { MapPin } from "@/lib/types";
 
 import { useMapStore } from "@/providers/map-store-provider";
+
+interface MapPanelProps {
+  pins: MapPin[];
+}
 
 // @mapbox/search-js-react accesses `document` on import — must be loaded client-side only
 const SearchBoxComponent = dynamic(() => import("@/components/search-box"), {
   ssr: false,
 });
 
-export default function MapGL({ pins }: { pins: Pin[] }) {
+export default function MapGL({ pins }: MapPanelProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
@@ -23,18 +27,22 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
   // creates new mapboxgl map on mount and attaches to mapContainerRef
   // using token to authenticates with mapbox's servers
   useEffect(() => {
+    if (!mapContainerRef.current) return;
+
     mapRef.current = new mapboxgl.Map({
       accessToken: `${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
-      container: mapContainerRef.current!,
+      container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/standard",
       center: [105, 30],
       zoom: 2,
     });
 
+    mapRef.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+
     return () => mapRef.current?.remove();
   }, []);
 
-  // reacts to pins change - add markers and fitBounds
+  // reacts to pins change - add markers
   useEffect(() => {
     const currentMap = mapRef.current;
     if (!currentMap) return;
@@ -47,7 +55,13 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
     // maintain array of markers and cleanup functions
     const activeMarkers: mapboxgl.Marker[] = [];
     const cleanups: Array<() => void> = [];
-    const bounds = new mapboxgl.LngLatBounds();
+
+    const mostRecentPin = pins[0];
+    currentMap.flyTo({
+      center: [mostRecentPin.lng, mostRecentPin.lat],
+      zoom: 10,
+      essential: true,
+    });
 
     pins.forEach((pin) => {
       const newMarker = new mapboxgl.Marker()
@@ -55,7 +69,6 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
         .addTo(currentMap);
 
       activeMarkers.push(newMarker);
-      bounds.extend([pin.lng, pin.lat]);
 
       const markerElement = newMarker.getElement();
 
@@ -77,9 +90,6 @@ export default function MapGL({ pins }: { pins: Pin[] }) {
         markerElement.removeEventListener("click", handleMarkerClick);
       });
     });
-
-    // fit map viewport around generated bounds
-    currentMap.fitBounds(bounds, { padding: 250, maxZoom: 10 });
 
     // cleanup phase - remove markers and events when pins array change
     return () => {

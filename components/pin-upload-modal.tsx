@@ -5,6 +5,7 @@ import { createPin } from "@/lib/actions/pins";
 import LocationSearchInput from "./location-search-input";
 import { X } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import { getTodaysDate } from "@/lib/utils";
 
 export default function PinUploadModal({
   toggleModal,
@@ -176,6 +177,7 @@ export default function PinUploadModal({
               <input
                 type="date"
                 name="visited_at"
+                max={getTodaysDate()}
                 className="w-full border px-3 py-2 text-sm text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
                 required
                 onChange={(e) => setVisitDate(e.target.value)}

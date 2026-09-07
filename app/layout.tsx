@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Photo Hub",
+  title: "Photo Log",
   description:
     "A photo sharing map - pin your photos to the places you shot them.",
 };

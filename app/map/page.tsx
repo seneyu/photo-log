@@ -1,7 +1,8 @@
-import MapPanel from "@/components/map-panel";
 import Feedpanel from "@/components/feed-panel";
 import { createClient } from "@/lib/supabase/server";
 import { MapStoreProvider } from "@/providers/map-store-provider";
+import { headers } from "next/headers";
+import MapPanel from "@/components/map-panel-client";
 
 export default async function MapPage() {
   const supabase = await createClient();
@@ -9,23 +10,62 @@ export default async function MapPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // retrieve authenticated user's pins
-  const { data: pins } = await supabase
+  // read the user-agent in headers to detect mobile device
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get("user-agent") || "";
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(userAgent);
+
+  const paginationLimit = isMobile ? 10 : 5;
+
+  // all pins to list on map
+  const mapPinsQuery = supabase
+    .from("pins")
+    .select("id, lat, lng")
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false });
+
+  // pins for initial pagination, limit desktop 5, mobile 10
+  const initialFeedQuery = supabase
     .from("pins")
     .select("*")
     .eq("user_id", user?.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(paginationLimit);
+
+  const [{ data: mapPins }, { data: initialPins }] = await Promise.all([
+    mapPinsQuery,
+    initialFeedQuery,
+  ]);
+
+  const pinsArray = initialPins ?? [];
+  const mapPinsArray = mapPins ?? [];
+  const hasPins = pinsArray.length > 0;
+
+  // generate the cursor pointer
+  const lastPin = hasPins ? pinsArray[pinsArray?.length - 1] : null;
+  const nextCursorCreatedAt = lastPin ? lastPin.created_at : "";
+  const nextCursorId = lastPin ? lastPin.id : null;
+  const hasMoreInitial = pinsArray.length < mapPinsArray.length;
 
   return (
     <MapStoreProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Map - 60% */}
-        <div className="hidden md:block h-full w-3/5">
-          <MapPanel pins={pins ?? []} />
-        </div>
+        {!isMobile && (
+          <div className="hidden md:block w-full">
+            <MapPanel pins={mapPins ?? []} />
+          </div>
+        )}
 
         {/* Feed column - 40% */}
-        <Feedpanel user={user} pins={pins ?? []} />
+        <Feedpanel
+          user={user}
+          initialPins={initialPins ?? []}
+          nextCursorId={nextCursorId}
+          nextCursorCreatedAt={nextCursorCreatedAt}
+          limit={paginationLimit}
+          hasMoreInitial={hasMoreInitial}
+        />
       </div>
     </MapStoreProvider>
   );
