@@ -15,7 +15,7 @@ export default function PinUploadModal({
   const [validFiles, setValidFiles] = useState<File[]>([]); // File object has properties name, size, type
   const [errorMessage, setErrorMessage] = useState("");
   const [postErrorMessage, setPostErrorMessage] = useState("");
-  const [caption, setCaption] = useState("");
+  const [, setCaption] = useState("");
   const [visitDate, setVisitDate] = useState("");
 
   const [coordinates, setCoordinates] = useState<{

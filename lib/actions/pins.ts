@@ -26,8 +26,8 @@ export async function createPin(formData: FormData) {
   const visited_at = formData.get("visited_at");
 
   // upload photos to supabase file storage and retrieve photo urls
-  for (let file of files) {
-    let path = `${user?.id}/${crypto.randomUUID()}-${file.name}`;
+  for (const file of files) {
+    const path = `${user?.id}/${crypto.randomUUID()}-${file.name}`;
     const { error } = await supabase.storage
       .from("photo-uploads")
       .upload(path, file);
@@ -94,7 +94,7 @@ export async function updatePin(
     return { success: false, error: "Not authenticated." };
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("pins")
     .update({
       caption: updates.caption,
@@ -129,7 +129,7 @@ export async function deletePin(pinId: string) {
     return { success: false, error: "Not authenticated." };
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("pins")
     .delete()
     .eq("id", pinId)

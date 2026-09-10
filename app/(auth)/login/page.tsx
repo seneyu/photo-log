@@ -74,7 +74,7 @@ export default async function Login({
         </form>
 
         <p className="text-sm text-center text-zinc-500">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/signup"
             className="font-medium text-black hover:underline"

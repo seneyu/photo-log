@@ -48,11 +48,20 @@ export default function Feedpanel({
 
   // sync state when revalidatePath updates initialPins from server action
   useEffect(() => {
-    setPins((prevPins) => {
-      const incomingIds = new Set(initialPins.map((p) => p.id));
-      const preservedPrev = prevPins.filter((p) => !incomingIds.has(p.id));
-      return [...initialPins, ...preservedPrev];
+    let isMounted = true;
+
+    Promise.resolve().then(() => {
+      if (isMounted)
+        setPins((prevPins) => {
+          const incomingIds = new Set(initialPins.map((p) => p.id));
+          const preservedPrev = prevPins.filter((p) => !incomingIds.has(p.id));
+          return [...initialPins, ...preservedPrev];
+        });
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, [initialPins]);
 
   // map selection scrolling
@@ -101,11 +110,16 @@ export default function Feedpanel({
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [hasMore, cursorId, cursorCreateAt, limit]);
+  }, [hasMore, cursorId, cursorCreateAt, limit, loading]);
 
   return (
     <div className="flex h-full w-full md:w-3/5 flex-col border-l bg-neutral-50 min-h-0">
       <Nav toggleModal={toggleModal} />
+      {error && (
+        <div className="mx-8 mt-4 p-3 bg-red-50 text-red-600 text-xs font-medium rounded-md border border-red-100">
+          error!
+        </div>
+      )}
       <div
         className={`flex-1 min-h-0 overflow-y-auto p-8 flex flex-col ${pins.length === 0 ? "items-center justify-center" : "items-center"}`}
       >

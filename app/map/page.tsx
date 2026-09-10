@@ -38,7 +38,6 @@ export default async function MapPage() {
 
   const pinsArray = initialPins ?? [];
   const mapPinsArray = mapPins ?? [];
-  const hasPins = pinsArray.length > 0;
 
   // generate the cursor pointer
   const { nextCursorId, nextCursorCreatedAt } = getNextCursor(pinsArray);
