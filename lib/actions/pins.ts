@@ -147,7 +147,7 @@ export async function deletePin(pinId: string) {
 }
 
 export async function fetchMorePins(
-  nextCursorId: string,
+  nextCursorId: string | null,
   nextCursorCreatedAt: string,
   limit: number,
 ) {

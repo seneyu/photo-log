@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MapStoreProvider } from "@/providers/map-store-provider";
 import { headers } from "next/headers";
 import MapPanel from "@/components/map-panel-client";
+import { getDeviceDetail, getNextCursor, hasMorePins } from "@/lib/pagination";
 
 export default async function MapPage() {
   const supabase = await createClient();
@@ -13,9 +14,7 @@ export default async function MapPage() {
   // read the user-agent in headers to detect mobile device
   const reqHeaders = await headers();
   const userAgent = reqHeaders.get("user-agent") || "";
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(userAgent);
-
-  const paginationLimit = isMobile ? 10 : 5;
+  const { isMobile, paginationLimit } = getDeviceDetail(userAgent);
 
   // all pins to list on map
   const mapPinsQuery = supabase
@@ -42,10 +41,8 @@ export default async function MapPage() {
   const hasPins = pinsArray.length > 0;
 
   // generate the cursor pointer
-  const lastPin = hasPins ? pinsArray[pinsArray?.length - 1] : null;
-  const nextCursorCreatedAt = lastPin ? lastPin.created_at : "";
-  const nextCursorId = lastPin ? lastPin.id : null;
-  const hasMoreInitial = pinsArray.length < mapPinsArray.length;
+  const { nextCursorId, nextCursorCreatedAt } = getNextCursor(pinsArray);
+  const hasMoreInitial = hasMorePins(pinsArray.length, mapPinsArray.length);
 
   return (
     <MapStoreProvider>

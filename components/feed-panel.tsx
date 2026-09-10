@@ -16,7 +16,7 @@ interface FeedPanelProps {
   user: User | null;
   initialPins: Pin[];
   limit: number;
-  nextCursorId: string;
+  nextCursorId: string | null;
   nextCursorCreatedAt: string;
   hasMoreInitial: boolean;
 }
