@@ -56,6 +56,7 @@ describe("Pins Server Actions", () => {
     });
 
     it("returns an error when photo upload fails", async () => {
+      // intercepting final query resolve
       mockSupabase.storage.upload.mockResolvedValue({
         error: { message: "upload failed" },
       });
@@ -75,10 +76,24 @@ describe("Pins Server Actions", () => {
       const formData = new FormData();
       formData.append("photo_files", new File(["fake"], "test.jpg"));
       formData.append("caption", "Amazing view!");
+      formData.append("location_name", "Golden Gate Park");
+      formData.append("lat", "37.7697");
+      formData.append("lng", "-122.4769");
+      formData.append("visited_at", "2026-01-01");
 
       const result = await createPin(formData);
 
       expect(result).toEqual({ success: true, error: "" });
+      expect(mockSupabase.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: "user_123",
+          photo_urls: ["http://fake-url.jpg"],
+          caption: "Amazing view!",
+          location_name: "Golden Gate Park",
+          lat: 37.7697,
+          lng: -122.4769,
+        }),
+      );
       expect(revalidatePath).toHaveBeenCalledWith("/map");
     });
   });
@@ -88,21 +103,26 @@ describe("Pins Server Actions", () => {
       caption: "Updated caption",
       location_name: "de Young Museum",
       lat: 37.7714,
-      lng: -122.4681,
+      lng: -122.4686,
       visited_at: "2026-06-11",
     };
 
     it("successfully updates a pin when authenticated", async () => {
       const result = await updatePin("pin_123", validUpdates);
       expect(result).toEqual({ success: true, error: "" });
+      expect(mockSupabase.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          caption: "Updated caption",
+          location_name: "de Young Museum",
+          lat: 37.7714,
+          lng: -122.4686,
+          visited_at: "2026-06-11",
+        }),
+      );
       expect(revalidatePath).toHaveBeenCalledWith("/map");
     });
 
     it("returns failure object if the database update fails", async () => {
-      // intercepting final query resolve
-      mockSupabase.insert.mockResolvedValue({
-        error: { message: "Database Down" },
-      });
       mockSupabase.eq.mockImplementation(() => ({
         eq: vi.fn().mockResolvedValue({ error: { message: "Database Down" } }),
       }));
@@ -123,6 +143,8 @@ describe("Pins Server Actions", () => {
 
       const result = await deletePin("pin_123");
       expect(result).toEqual({ success: true, error: "" });
+      expect(mockSupabase.delete).toHaveBeenCalled();
+      expect(mockSupabase.eq).toHaveBeenCalledWith("id", "pin_123");
       expect(revalidatePath).toHaveBeenCalledWith("/map");
     });
   });
