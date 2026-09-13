@@ -194,6 +194,9 @@ export default function Feedpanel({
       {isModalOpen && <PinUploadModal toggleModal={toggleModal} />}
       {detailPin && (
         <PinDetailDrawer
+          onPinDelete={(pinId) =>
+            setPins((prev) => prev.filter((p) => p.id !== pinId))
+          }
           pin={detailPin}
           user={user}
           onClose={() => setDetailPinId(null)}

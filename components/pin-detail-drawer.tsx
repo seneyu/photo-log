@@ -13,10 +13,12 @@ import EmptyState from "./empty-state";
 import Image from "next/image";
 
 export default function PinDetailDrawer({
+  onPinDelete,
   pin,
   user,
   onClose,
 }: {
+  onPinDelete: (pinId: string) => void;
   pin: Pin;
   user: User | null;
   onClose: () => void;
@@ -108,7 +110,7 @@ export default function PinDetailDrawer({
 
     const { success, error } = await deletePin(pin.id);
     if (success) {
-      router.refresh(); // tells browser to fetch fresh data from the server
+      onPinDelete(pin.id); // remove from the accumulated state
       onClose();
     } else {
       console.error("Failed to delete pin: ", error);
