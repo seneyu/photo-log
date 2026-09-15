@@ -103,6 +103,9 @@ export default function PinUploadModal({
     if (!success) {
       setPostErrorMessage(error);
       setIsSubmitting(false);
+      window.alert(
+        "Something went wrong. Couldn't create this comment. Please try again.",
+      );
     } else toggleModal();
   };
 

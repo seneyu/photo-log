@@ -81,7 +81,7 @@ export default function MapGL({ pins }: MapPanelProps) {
       // marker click listener - zustand action
       const handleMarkerClick = () => {
         setActivePinId(pin.id);
-        console.log("clicked: ", pin.id);
+        // console.log("clicked: ", pin.id);
       };
       markerElement.addEventListener("click", handleMarkerClick);
 
