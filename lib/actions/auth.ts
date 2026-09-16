@@ -69,3 +69,19 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function guestLogin() {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: process.env.DEMO_ACCOUNT_EMAIL as string,
+    password: process.env.DEMO_ACCOUNT_PASSWORD as string,
+  });
+
+  if (error) {
+    redirect(
+      `/login?error=${encodeURIComponent("Demo login unavailable right now.")}`,
+    );
+  }
+
+  redirect("/map");
+}

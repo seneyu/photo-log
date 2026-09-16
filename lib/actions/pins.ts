@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "../supabase/server";
+import { isDemoAccount } from "../utils";
 
 export async function createPin(formData: FormData) {
   const photo_urls: string[] = [];
@@ -15,6 +16,13 @@ export async function createPin(formData: FormData) {
   if (!user) {
     console.error("Error in createPin server action. No authenticated user.");
     return { success: false, error: "Not authenticated." };
+  }
+
+  if (isDemoAccount(user.email)) {
+    return {
+      success: false,
+      error: "Demo mode is read-only. Sign up to create your own pins.",
+    };
   }
 
   // process formData
@@ -94,6 +102,13 @@ export async function updatePin(
     return { success: false, error: "Not authenticated." };
   }
 
+  if (isDemoAccount(user.email)) {
+    return {
+      success: false,
+      error: "Demo mode is read-only. Sign up to create your own pins.",
+    };
+  }
+
   const { data, error } = await supabase
     .from("pins")
     .update({
@@ -127,6 +142,13 @@ export async function deletePin(pinId: string) {
   if (!user) {
     console.error("Error in deletePin server action. No authenticated user.");
     return { success: false, error: "Not authenticated." };
+  }
+
+  if (isDemoAccount(user.email)) {
+    return {
+      success: false,
+      error: "Demo mode is read-only. Sign up to create your own pins.",
+    };
   }
 
   const { data, error } = await supabase

@@ -13,10 +13,12 @@ import EmptyState from "./empty-state";
 import Image from "next/image";
 
 export default function PinDetailDrawer({
+  onPinDelete,
   pin,
   user,
   onClose,
 }: {
+  onPinDelete: (pinId: string) => void;
   pin: Pin;
   user: User | null;
   onClose: () => void;
@@ -57,6 +59,7 @@ export default function PinDetailDrawer({
 
   const handleSubmitComment = async (e: React.SubmitEvent) => {
     e.preventDefault();
+
     if (!commentText.trim()) return;
     setIsSubmitting(true);
 
@@ -70,6 +73,9 @@ export default function PinDetailDrawer({
       setCommentText("");
     } else {
       console.error("Failed to post comment: ", error);
+      window.alert(
+        "Something went wrong. Couldn't create this comment. Please try again.",
+      );
     }
 
     setIsSubmitting(false);
@@ -97,6 +103,9 @@ export default function PinDetailDrawer({
       router.refresh(); // tells browser to fetch fresh data from the server
     } else {
       console.error("Failed to update pin: ", error);
+      window.alert(
+        "Something went wrong. Couldn't create this comment. Please try again.",
+      );
     }
   };
 
@@ -108,10 +117,13 @@ export default function PinDetailDrawer({
 
     const { success, error } = await deletePin(pin.id);
     if (success) {
-      router.refresh(); // tells browser to fetch fresh data from the server
+      onPinDelete(pin.id); // remove from the accumulated state
       onClose();
     } else {
       console.error("Failed to delete pin: ", error);
+      window.alert(
+        "Something went wrong. Couldn't delete this pin. Please try again.",
+      );
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { createClient } from "../supabase/server";
 import { CommentWithProfile } from "../types";
+import { isDemoAccount } from "../utils";
 
 export async function createComment(
   pinId: string,
@@ -18,6 +19,13 @@ export async function createComment(
       "Error in createComment server action. No authenticated user.",
     );
     return { success: false, error: "Not authenticated." };
+  }
+
+  if (isDemoAccount(user.email)) {
+    return {
+      success: false,
+      error: "Demo mode is read-only. Sign up to leave a comment.",
+    };
   }
 
   const { data, error } = await supabase
