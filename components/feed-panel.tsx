@@ -88,15 +88,6 @@ export default function Feedpanel({
     };
   }, [initialPins]);
 
-  // // map selection scrolling
-  // useEffect(() => {
-  //   if (activePinId && cardRefs.current[activePinId]) {
-  //     cardRefs.current[activePinId].scrollIntoView({
-  //       behavior: "smooth",
-  //     });
-  //   }
-  // }, [activePinId]);
-
   useEffect(() => {
     if (!activePinId) return;
 

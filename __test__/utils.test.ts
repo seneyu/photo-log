@@ -1,5 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { formatDate, formatTime, getTodaysDate } from "@/lib/utils";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  afterAll,
+} from "vitest";
+import {
+  formatDate,
+  formatTime,
+  getTodaysDate,
+  isDemoAccount,
+} from "@/lib/utils";
 
 describe("Date and Time Helpers", () => {
   beforeEach(() => {
@@ -42,6 +55,31 @@ describe("Date and Time Helpers", () => {
   describe("getTodaysDate", () => {
     it("returns today's date in YYYY-MM-DD format based on system time", () => {
       expect(getTodaysDate()).toBe("2026-09-09");
+    });
+  });
+
+  describe("isDemoAccount", () => {
+    // get the original value before modifying, and then put it back when finishes
+    const originalEnv = process.env.DEMO_ACCOUNT_EMAIL;
+
+    beforeEach(() => {
+      process.env.DEMO_ACCOUNT_EMAIL = "demo@email.com";
+    });
+
+    afterAll(() => {
+      process.env.DEMO_ACCOUNT_EMAIL = originalEnv;
+    });
+
+    it("returns true if the email matches the demo account email", () => {
+      expect(isDemoAccount("demo@email.com")).toBe(true);
+    });
+
+    it("returns false if the email does not match", () => {
+      expect(isDemoAccount("incorrect@email.com")).toBe(false);
+    });
+
+    it("returns false if the email is undefined", () => {
+      expect(isDemoAccount(undefined)).toBe(false);
     });
   });
 });

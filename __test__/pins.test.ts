@@ -7,6 +7,7 @@ import {
 } from "@/lib/actions/pins";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { afterEach } from "node:test";
 
 // mock supabase server client constructor
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
@@ -16,9 +17,13 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 describe("Pins Server Actions", () => {
   let mockSupabase: any;
   const mockUser = { id: "user_123", email: "test@example.com" };
+  const originalDemoEmail = process.env.DEMO_ACCOUNT_EMAIL;
+  const mockDemoEmail = "demo@email.com";
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    process.env.DEMO_ACCOUNT_EMAIL = mockDemoEmail;
 
     mockSupabase = {
       auth: {
@@ -45,7 +50,25 @@ describe("Pins Server Actions", () => {
     (createClient as any).mockResolvedValue(mockSupabase);
   });
 
+  afterEach(() => {
+    process.env.DEMO_ACCOUNT_EMAIL = originalDemoEmail;
+  });
+
   describe("createPin", () => {
+    it("returns an error when the authenticated user is a demo user", async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: "demo_123", email: mockDemoEmail } },
+      });
+
+      const formData = new FormData();
+      const result = await createPin(formData);
+
+      expect(result).toEqual({
+        success: false,
+        error: "Demo mode is read-only. Sign up to create your own pins.",
+      });
+    });
+
     it("returns an error when there is no authenticated user", async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
 
