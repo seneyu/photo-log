@@ -25,6 +25,7 @@ export default function PinUploadModal({
   } | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_FILE_SIZE_BYTES = 10485760; // max per file 10MB (10 * 1024 * 1024)
   const COMPRESSION_THRESHOLD_BYTES = 1048576; // threshold 1MB (1 * 1024 * 1024)
@@ -89,6 +90,7 @@ export default function PinUploadModal({
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isProcessing) return;
+    setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget); // reads current value of every 'name' attribute in <form> element
 
@@ -100,6 +102,10 @@ export default function PinUploadModal({
 
     if (!success) {
       setPostErrorMessage(error);
+      setIsSubmitting(false);
+      window.alert(
+        "Something went wrong. Couldn't create this comment. Please try again.",
+      );
     } else toggleModal();
   };
 
@@ -189,9 +195,19 @@ export default function PinUploadModal({
             <button
               type="submit"
               className="rounded-full border border-zinc-300 bg-white px-8 py-1.5 text-sm text-zinc-500 cursor-not-allowed enabled:cursor-pointer enabled:border-black enabled:bg-black enabled:text-white enabled:hover:bg-zinc-700"
-              disabled={!coordinates || !validFiles.length || !visitDate}
+              disabled={
+                !coordinates ||
+                !validFiles.length ||
+                !visitDate ||
+                isProcessing ||
+                isSubmitting
+              }
             >
-              {isProcessing ? "Processing..." : "Post"}
+              {isSubmitting
+                ? "Posting..."
+                : isProcessing
+                  ? "Processing..."
+                  : "Post"}
             </button>
           </div>
           {postErrorMessage && (

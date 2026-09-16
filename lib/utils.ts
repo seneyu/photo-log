@@ -29,3 +29,7 @@ export const getTodaysDate = () => {
   const day = today.getDate().toString().padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+
+export const isDemoAccount = (email: string | undefined) => {
+  return email === process.env.DEMO_ACCOUNT_EMAIL;
+};
