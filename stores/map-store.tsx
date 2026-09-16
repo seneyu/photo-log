@@ -3,11 +3,13 @@ import { createStore } from "zustand/vanilla";
 // structure for UI state
 export type MapUiState = {
   activePinId: string | null;
+  activeDetailPinId: string | null;
 };
 
 // actions functions to mutate state
 export type MapUiActions = {
   setActivePinId: (id: string | null) => void;
+  setActiveDetailPinId: (id: string | null) => void;
 };
 
 export type MapStore = MapUiState & MapUiActions;
@@ -15,6 +17,7 @@ export type MapStore = MapUiState & MapUiActions;
 // initial fallback state
 export const defaultInitState: MapUiState = {
   activePinId: null,
+  activeDetailPinId: null,
 };
 
 // the Vanilla Factory Function
@@ -35,6 +38,10 @@ export const createMapStore = (initState: MapUiState = defaultInitState) => {
           }
         }, 1500);
       }
+    },
+
+    setActiveDetailPinId: (id) => {
+      set({ activeDetailPinId: id });
     },
   }));
 };

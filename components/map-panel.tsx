@@ -23,6 +23,9 @@ export default function MapGL({ pins }: MapPanelProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
   const setActivePinId = useMapStore((state) => state.setActivePinId);
+  const setActiveDetailPinId = useMapStore(
+    (state) => state.setActiveDetailPinId,
+  );
 
   // creates new mapboxgl map on mount and attaches to mapContainerRef
   // using token to authenticates with mapbox's servers
@@ -80,8 +83,8 @@ export default function MapGL({ pins }: MapPanelProps) {
 
       // marker click listener - zustand action
       const handleMarkerClick = () => {
-        setActivePinId(pin.id);
-        // console.log("clicked: ", pin.id);
+        setActivePinId(pin.id); // triggers scroll if the card is loaded
+        // setActiveDetailPinId(pin.id); // always opens the drawer regardless of the feed load state
       };
       markerElement.addEventListener("click", handleMarkerClick);
 

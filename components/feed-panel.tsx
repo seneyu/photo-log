@@ -11,6 +11,7 @@ import EmptyState from "./empty-state";
 import { Scroll } from "lucide-react";
 import Image from "next/image";
 import { fetchMorePins } from "@/lib/actions/pins";
+import { createClient } from "@/lib/supabase/client";
 
 interface FeedPanelProps {
   user: User | null;
@@ -30,7 +31,6 @@ export default function Feedpanel({
   hasMoreInitial,
 }: FeedPanelProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [detailPinId, setDetailPinId] = useState<string | null>(null);
   const activePinId = useMapStore((state) => state.activePinId);
   const cardRefs = useRef<Record<string, HTMLDivElement>>({});
 
@@ -41,6 +41,30 @@ export default function Feedpanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  const activeDetailPinId = useMapStore((state) => state.activeDetailPinId);
+  const setActiveDetailPinId = useMapStore(
+    (state) => state.setActiveDetailPinId,
+  );
+
+  const activeDetailPin = pins.find((p) => p.id === activeDetailPinId) ?? null;
+  const [fetchedPin, setFetchedPin] = useState<Pin | null>(null);
+
+  useEffect(() => {
+    if (activeDetailPinId && !activeDetailPin) {
+      const supabase = createClient();
+      supabase
+        .from("pins")
+        .select("*")
+        .eq("id", activeDetailPinId)
+        .single()
+        .then(({ data }) => setFetchedPin(data));
+    } else {
+      setFetchedPin(null);
+    }
+  }, [activeDetailPinId, activeDetailPin]);
+
+  const pinToShow = activeDetailPin ?? fetchedPin;
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -55,16 +79,33 @@ export default function Feedpanel({
     });
   }, [initialPins]);
 
-  // map selection scrolling
-  useEffect(() => {
-    if (activePinId && cardRefs.current[activePinId]) {
-      cardRefs.current[activePinId].scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-  }, [activePinId]);
+  // // map selection scrolling
+  // useEffect(() => {
+  //   if (activePinId && cardRefs.current[activePinId]) {
+  //     cardRefs.current[activePinId].scrollIntoView({
+  //       behavior: "smooth",
+  //     });
+  //   }
+  // }, [activePinId]);
 
-  const detailPin = pins.find((p) => p.id === detailPinId) ?? null;
+  useEffect(() => {
+    if (!activePinId) return;
+
+    const isLoaded = pins.some((p) => p.id === activePinId);
+
+    if (isLoaded && cardRefs.current[activePinId]) {
+      cardRefs.current[activePinId].scrollIntoView({ behavior: "smooth" });
+
+      // give the scroll animation some time to visually land before the drawer appears
+      const timer = setTimeout(() => {
+        setActiveDetailPinId(activePinId);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      // not loaded so nothing to scroll to, open drawer immediately
+      setActiveDetailPinId(activePinId);
+    }
+  }, [activePinId, pins]);
 
   // intersection detection for infinite scroll
   useEffect(() => {
@@ -132,7 +173,7 @@ export default function Feedpanel({
                   <div
                     className="relative w-full aspect-square bg-neutral-100 cursor-pointer overflow-hidden rounded-sm"
                     onClick={() => {
-                      setDetailPinId(pin.id);
+                      setActiveDetailPinId(pin.id);
                     }}
                   >
                     {coverPhoto && (
@@ -192,14 +233,14 @@ export default function Feedpanel({
         )}
       </div>
       {isModalOpen && <PinUploadModal toggleModal={toggleModal} />}
-      {detailPin && (
+      {pinToShow && (
         <PinDetailDrawer
           onPinDelete={(pinId) =>
             setPins((prev) => prev.filter((p) => p.id !== pinId))
           }
-          pin={detailPin}
+          pin={pinToShow}
           user={user}
-          onClose={() => setDetailPinId(null)}
+          onClose={() => setActiveDetailPinId(null)}
         />
       )}
     </div>
