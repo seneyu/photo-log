@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  vi,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   formatDate,
   formatTime,
@@ -59,15 +51,12 @@ describe("Date and Time Helpers", () => {
   });
 
   describe("isDemoAccount", () => {
-    // get the original value before modifying, and then put it back when finishes
-    const originalEnv = process.env.DEMO_ACCOUNT_EMAIL;
-
     beforeEach(() => {
-      process.env.DEMO_ACCOUNT_EMAIL = "demo@email.com";
+      vi.stubEnv("DEMO_ACCOUNT_EMAIL", "demo@email.com");
     });
 
-    afterAll(() => {
-      process.env.DEMO_ACCOUNT_EMAIL = originalEnv;
+    afterEach(() => {
+      vi.unstubAllEnvs();
     });
 
     it("returns true if the email matches the demo account email", () => {
