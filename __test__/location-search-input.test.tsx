@@ -65,5 +65,74 @@ describe("Location Search Input", () => {
         expect(screen.getByText("Golden Gate Park")).toBeInTheDocument();
       });
     });
+
+    it("calls onSelect with the retrieve location when a suggestion is clicked", async () => {
+      const mockOnSelect = vi.fn();
+
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes("/suggest")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ suggestions: mockSuggestions }),
+          });
+        }
+
+        if (url.includes("/retrieve")) {
+          return Promise.resolve({
+            json: () =>
+              Promise.resolve({
+                features: [
+                  {
+                    properties: {
+                      name: "Golden Gate Park",
+                      coordinates: { latitude: 37.7694, longitude: -122.4862 },
+                    },
+                  },
+                ],
+              }),
+          });
+        }
+      });
+
+      vi.useFakeTimers();
+      render(<LocationSearchInput onSelect={mockOnSelect} />);
+
+      const input = screen.getByPlaceholderText(/golden gate park/i);
+      fireEvent.change(input, { target: { value: "Golden" } });
+      vi.advanceTimersByTime(1000);
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(screen.getByText("Golden Gate Park")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Golden Gate Park"));
+
+      await waitFor(() => {
+        expect(mockOnSelect).toHaveBeenCalledWith({
+          lat: 37.7694,
+          lng: -122.4862,
+          location_name: "Golden Gate Park",
+        });
+      });
+    });
+
+    it("does not call fetch until typing pauses (debounce)", () => {
+      vi.useFakeTimers();
+      render(<LocationSearchInput onSelect={vi.fn()} />);
+
+      const input = screen.getByPlaceholderText(/golden gate park/i);
+
+      fireEvent.change(input, { target: { value: "G" } });
+      vi.advanceTimersByTime(500);
+      fireEvent.change(input, { target: { value: "Go" } });
+      vi.advanceTimersByTime(500); // not being called yet after 500
+
+      expect(mockFetch).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(500); // now it should fire since typing has "settled"
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
+    });
   });
 });
