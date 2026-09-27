@@ -40,7 +40,11 @@ export default function PinDetailDrawer({
 
   useEffect(() => {
     const supabase = createClient();
-    setIsLoadingComments(true);
+    let isMounted = true;
+
+    Promise.resolve().then(() => {
+      if (isMounted) setIsLoadingComments(true);
+    });
 
     supabase
       .from("comments")
@@ -48,6 +52,8 @@ export default function PinDetailDrawer({
       .eq("pin_id", pin.id)
       .order("created_at", { ascending: true })
       .then(({ data, error }) => {
+        if (!isMounted) return;
+
         if (error) {
           console.error("Failed to load comments: ", error);
         } else {
@@ -55,6 +61,10 @@ export default function PinDetailDrawer({
         }
         setIsLoadingComments(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [pin.id]);
 
   const handleSubmitComment = async (e: React.SubmitEvent) => {

@@ -17,7 +17,7 @@ interface FeedPanelProps {
   user: User | null;
   initialPins: Pin[];
   limit: number;
-  nextCursorId: string;
+  nextCursorId: string | null;
   nextCursorCreatedAt: string;
   hasMoreInitial: boolean;
 }
@@ -51,17 +51,23 @@ export default function Feedpanel({
   const [fetchedPin, setFetchedPin] = useState<Pin | null>(null);
 
   useEffect(() => {
-    if (activeDetailPinId && !activeDetailPin) {
-      const supabase = createClient();
-      supabase
-        .from("pins")
-        .select("*")
-        .eq("id", activeDetailPinId)
-        .single()
-        .then(({ data }) => setFetchedPin(data));
-    } else {
-      setFetchedPin(null);
-    }
+    if (!activeDetailPinId || activeDetailPin) return;
+
+    const supabase = createClient();
+    let cancelled = false;
+
+    supabase
+      .from("pins")
+      .select("*")
+      .eq("id", activeDetailPinId)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled) setFetchedPin(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeDetailPinId, activeDetailPin]);
 
   const pinToShow = activeDetailPin ?? fetchedPin;
@@ -72,21 +78,24 @@ export default function Feedpanel({
 
   // sync state when revalidatePath updates initialPins from server action
   useEffect(() => {
-    setPins((prevPins) => {
-      const incomingIds = new Set(initialPins.map((p) => p.id));
-      const preservedPrev = prevPins.filter((p) => !incomingIds.has(p.id));
-      return [...initialPins, ...preservedPrev];
+    let isMounted = true;
+
+    Promise.resolve().then(() => {
+      if (isMounted)
+        setPins((prevPins) => {
+          const incomingIds = new Set(initialPins.map((p) => p.id));
+          const preservedPrev = prevPins.filter((p) => !incomingIds.has(p.id));
+          return [...initialPins, ...preservedPrev];
+        });
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, [initialPins]);
 
-  // // map selection scrolling
-  // useEffect(() => {
-  //   if (activePinId && cardRefs.current[activePinId]) {
-  //     cardRefs.current[activePinId].scrollIntoView({
-  //       behavior: "smooth",
-  //     });
-  //   }
-  // }, [activePinId]);
+  // track pending timer and cancel it explicitly on manual close
+  const pendingDrawerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!activePinId) return;
@@ -97,15 +106,22 @@ export default function Feedpanel({
       cardRefs.current[activePinId].scrollIntoView({ behavior: "smooth" });
 
       // give the scroll animation some time to visually land before the drawer appears
-      const timer = setTimeout(() => {
+      pendingDrawerTimer.current = setTimeout(() => {
         setActiveDetailPinId(activePinId);
+        pendingDrawerTimer.current = null;
       }, 1000);
-      return () => clearTimeout(timer);
     } else {
       // not loaded so nothing to scroll to, open drawer immediately
       setActiveDetailPinId(activePinId);
     }
-  }, [activePinId, pins]);
+
+    return () => {
+      if (pendingDrawerTimer.current) {
+        clearTimeout(pendingDrawerTimer.current);
+        pendingDrawerTimer.current = null;
+      }
+    };
+  }, [activePinId, pins, setActiveDetailPinId]);
 
   // intersection detection for infinite scroll
   useEffect(() => {
@@ -142,11 +158,16 @@ export default function Feedpanel({
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [hasMore, cursorId, cursorCreateAt, limit]);
+  }, [hasMore, cursorId, cursorCreateAt, limit, loading]);
 
   return (
     <div className="flex h-full w-full md:w-3/5 flex-col border-l bg-neutral-50 min-h-0">
       <Nav toggleModal={toggleModal} />
+      {error && (
+        <div className="mx-8 mt-4 p-3 bg-red-50 text-red-600 text-xs font-medium rounded-md border border-red-100">
+          error!
+        </div>
+      )}
       <div
         className={`flex-1 min-h-0 overflow-y-auto p-8 flex flex-col ${pins.length === 0 ? "items-center justify-center" : "items-center"}`}
       >
@@ -240,7 +261,15 @@ export default function Feedpanel({
           }
           pin={pinToShow}
           user={user}
-          onClose={() => setActiveDetailPinId(null)}
+          onClose={() => {
+            if (pendingDrawerTimer.current) {
+              clearTimeout(pendingDrawerTimer.current);
+              pendingDrawerTimer.current = null;
+            }
+
+            setActiveDetailPinId(null);
+            setFetchedPin(null);
+          }}
         />
       )}
     </div>
