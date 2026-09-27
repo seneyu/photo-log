@@ -51,17 +51,23 @@ export default function Feedpanel({
   const [fetchedPin, setFetchedPin] = useState<Pin | null>(null);
 
   useEffect(() => {
-    if (activeDetailPinId && !activeDetailPin) {
-      const supabase = createClient();
-      supabase
-        .from("pins")
-        .select("*")
-        .eq("id", activeDetailPinId)
-        .single()
-        .then(({ data }) => setFetchedPin(data));
-    } else {
-      setFetchedPin(null);
-    }
+    if (!activeDetailPinId || activeDetailPin) return;
+
+    const supabase = createClient();
+    let cancelled = false;
+
+    supabase
+      .from("pins")
+      .select("*")
+      .eq("id", activeDetailPinId)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled) setFetchedPin(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeDetailPinId, activeDetailPin]);
 
   const pinToShow = activeDetailPin ?? fetchedPin;
@@ -88,6 +94,9 @@ export default function Feedpanel({
     };
   }, [initialPins]);
 
+  // track pending timer and cancel it explicitly on manual close
+  const pendingDrawerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!activePinId) return;
 
@@ -97,15 +106,22 @@ export default function Feedpanel({
       cardRefs.current[activePinId].scrollIntoView({ behavior: "smooth" });
 
       // give the scroll animation some time to visually land before the drawer appears
-      const timer = setTimeout(() => {
+      pendingDrawerTimer.current = setTimeout(() => {
         setActiveDetailPinId(activePinId);
+        pendingDrawerTimer.current = null;
       }, 1000);
-      return () => clearTimeout(timer);
     } else {
       // not loaded so nothing to scroll to, open drawer immediately
       setActiveDetailPinId(activePinId);
     }
-  }, [activePinId, pins]);
+
+    return () => {
+      if (pendingDrawerTimer.current) {
+        clearTimeout(pendingDrawerTimer.current);
+        pendingDrawerTimer.current = null;
+      }
+    };
+  }, [activePinId, pins, setActiveDetailPinId]);
 
   // intersection detection for infinite scroll
   useEffect(() => {
@@ -245,7 +261,15 @@ export default function Feedpanel({
           }
           pin={pinToShow}
           user={user}
-          onClose={() => setActiveDetailPinId(null)}
+          onClose={() => {
+            if (pendingDrawerTimer.current) {
+              clearTimeout(pendingDrawerTimer.current);
+              pendingDrawerTimer.current = null;
+            }
+
+            setActiveDetailPinId(null);
+            setFetchedPin(null);
+          }}
         />
       )}
     </div>

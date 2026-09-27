@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from "vitest";
 import {
   createPin,
   updatePin,
@@ -7,15 +15,29 @@ import {
 } from "@/lib/actions/pins";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { afterEach } from "node:test";
 
 // mock supabase server client constructor
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
+const mockedCreateClient = vi.mocked(createClient);
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+type MockSupabaseClient = {
+  auth: { getUser: Mock };
+  storage: { from: Mock; upload: Mock; getPublicUrl: Mock };
+  from: Mock;
+  insert: Mock;
+  update: Mock;
+  delete: Mock;
+  select: Mock;
+  order: Mock;
+  or: Mock;
+  limit: Mock;
+  eq: Mock;
+};
+
 describe("Pins Server Actions", () => {
-  let mockSupabase: any;
+  let mockSupabase: MockSupabaseClient;
   const mockUser = { id: "user_123", email: "test@example.com" };
   const originalDemoEmail = process.env.DEMO_ACCOUNT_EMAIL;
   const mockDemoEmail = "demo@email.com";
@@ -47,7 +69,9 @@ describe("Pins Server Actions", () => {
       eq: vi.fn().mockReturnThis(),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
+    mockedCreateClient.mockResolvedValue(
+      mockSupabase as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
   });
 
   afterEach(() => {
