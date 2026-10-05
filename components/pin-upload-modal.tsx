@@ -110,10 +110,9 @@ export default function PinUploadModal({
   };
 
   return (
-    <div>
+    <div id="modal">
       {/* modal backdrop */}
       <div
-        id="modal"
         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
         onClick={toggleModal}
       >
