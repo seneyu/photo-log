@@ -91,7 +91,7 @@ CREATE POLICY "comments_read_all" ON comments FOR SELECT USING (true);
 CREATE POLICY "comments_insert_auth" ON comments FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "comments_delete_own" ON comments FOR DELETE USING (auth.uid() = user_id);
 
--- storage policy
+-- storage policy: insert
 CREATE "Allow authenticated uploads" 
 ON storage.objects 
 FOR INSERT
@@ -99,4 +99,25 @@ TO authenticated
 WITH CHECK (
   bucket_id = 'photo-uploads' AND
   (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- delete files in a bucket: objects permissions require BOTH delete and select
+-- storage policy: user read own objects
+CREATE POLICY "User Read Own Objects"
+ON storage.objects 
+FOR SELECT
+TO authenticated
+USING (
+    bucket_id = 'photo-uploads' AND 
+    (storage.foldername(name))[1] = auth.uid()::text
+)
+
+-- storage policy: user delete own objects
+CREATE POLICY "User Delete Own Objects"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (
+    bucket_id = 'photo-uploads' AND 
+    (storage.foldername(name))[1] = auth.uid()::text
 );

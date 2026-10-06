@@ -12,6 +12,7 @@ A map-based photo journal. Pin your photos to the places you took them, browse y
 - Mapbox GL
 - Tailwind CSS
 - Vitest
+- Playwright
 
 ## How to Start
 
@@ -32,6 +33,8 @@ GITHUB_SECRET=
 NEXT_PUBLIC_MAPBOX_TOKEN=
 DEMO_ACCOUNT_EMAIL=
 DEMO_ACCOUNT_PASSWORD=
+PLAYWRIGHT_TESTING_EMAIL=
+PLAYWRIGHT_TESTING_PASSWORD=
 ```
 
 Run the Supabase schema (`supabase/schema.sql`) against your own Supabase project, then:
