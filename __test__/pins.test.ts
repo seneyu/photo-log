@@ -24,7 +24,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 type MockSupabaseClient = {
   auth: { getUser: Mock };
-  storage: { from: Mock; upload: Mock; getPublicUrl: Mock };
+  storage: { from: Mock; upload: Mock; getPublicUrl: Mock; remove?: Mock };
   from: Mock;
   insert: Mock;
   update: Mock;
@@ -185,8 +185,17 @@ describe("Pins Server Actions", () => {
   describe("deletePin", () => {
     it("successfully deletes a pin when authorized", async () => {
       mockSupabase.eq.mockImplementation(() => ({
-        eq: vi.fn().mockResolvedValue({ error: null }),
+        eq: vi.fn().mockImplementation(() => ({
+          select: vi.fn().mockResolvedValue({
+            error: null,
+            data: [{ photo_urls: ["https://example.com"] }],
+          }),
+        })),
       }));
+
+      mockSupabase.storage.from = vi.fn().mockReturnValue({
+        remove: vi.fn().mockResolvedValue({ error: null }),
+      });
 
       const result = await deletePin("pin_123");
       expect(result).toEqual({ success: true, error: "" });
