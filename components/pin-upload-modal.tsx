@@ -29,12 +29,16 @@ export default function PinUploadModal({
 
   const MAX_FILE_SIZE_BYTES = 10485760; // max per file 10MB (10 * 1024 * 1024)
   const COMPRESSION_THRESHOLD_BYTES = 1048576; // threshold 1MB (1 * 1024 * 1024)
+  const MAX_TOTAL_BYTES = 7340032; // under the 8MB body limit, leaving headroom
 
   // handle and validate file change
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
     const selectedFiles = Array.from(e.target.files ?? []);
     if (selectedFiles.length > 5) {
-      window.alert("Do not select more than 5 images.");
+      setValidFiles([]);
+      input.value = "";
+      setErrorMessage("Do not select more than 5 images.");
       return;
     }
 
@@ -66,24 +70,33 @@ export default function PinUploadModal({
             lastModified: Date.now(),
           });
         } catch (err) {
-          console.error(
-            "Compression processing failed, falling back to original files: ",
-            file.name,
-            err,
-          );
-          return file;
+          console.error("Compression failed: ", file.name, err);
+          errors.push(`${file.name} could not be compressed.`);
+          return null;
         }
-      } else {
-        // skip lightweight files entirely
-        return file;
       }
+
+      return file; // small files skip compression
     });
 
     const processedFiles = await Promise.all(processPromises);
-    const approvedFiles = processedFiles.filter((file) => file !== null);
+    const approvedFiles = processedFiles.filter(
+      (file): file is File => file !== null,
+    );
+
+    // check the total before putting anything in the state
+    const totalSize = approvedFiles.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > MAX_TOTAL_BYTES) {
+      errors.push(
+        "Photos are too large in total. Try fewer or smaller photos.",
+      );
+      setValidFiles([]);
+      input.value = "";
+    } else {
+      setValidFiles(approvedFiles);
+    }
 
     setErrorMessage(errors.join(" "));
-    setValidFiles(approvedFiles);
     setIsProcessing(false);
   };
 
@@ -103,9 +116,6 @@ export default function PinUploadModal({
     if (!success) {
       setPostErrorMessage(error);
       setIsSubmitting(false);
-      window.alert(
-        "Something went wrong. Couldn't create this comment. Please try again.",
-      );
     } else toggleModal();
   };
 
