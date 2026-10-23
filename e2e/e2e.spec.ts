@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 
 let testCaption = "";
 
+test.beforeEach(() => {
+  testCaption = "";
+});
+
 test.afterEach("clean up by deleting the test post", async ({ page }) => {
   if (!testCaption) return;
 
@@ -43,7 +47,7 @@ test("user can login and upload a pin", async ({ page }) => {
 
   await expect(page.locator("text=Add Pin")).toBeVisible();
 
-  testCaption = `Testing-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const caption = `Testing-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   // step 3: fill out the form and upload a file
   await page.getByRole("button", { name: "Add Pin" }).click();
@@ -54,7 +58,7 @@ test("user can login and upload a pin", async ({ page }) => {
 
   await page
     .getByPlaceholder("e.g. Shot on Portra 400, f/2.8 at golden hour...")
-    .fill(testCaption);
+    .fill(caption);
 
   await page
     .getByPlaceholder("e.g. Golden Gate Park, San Francisco")
@@ -73,8 +77,10 @@ test("user can login and upload a pin", async ({ page }) => {
   await page.getByRole("button", { name: "Post" }).click();
   await expect(page.locator("#modal")).toBeHidden();
 
+  testCaption = caption;
+
   const newPost = page.getByRole("img", {
-    name: new RegExp(testCaption, "i"),
+    name: new RegExp(caption, "i"),
   });
   await expect(newPost).toBeVisible();
 });
