@@ -32,7 +32,7 @@
 ## Phase 5 - Performance & Testing
 
 - [x] Infinite scroll for feed panel to reduce initial page load
-- [ ] Testing and CI
+- [x] Testing and CI
 
 ---
 

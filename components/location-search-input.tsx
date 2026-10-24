@@ -96,7 +96,10 @@ export default function LocationSearchInput({
         }}
       />
       {suggestions.length > 0 && (
-        <ul className="absolute top-full left-0 right-0 z-10 max-h-36 overflow-y-auto border border-zinc-200 bg-white shadow-md">
+        <ul
+          id="suggestions"
+          className="absolute top-full left-0 right-0 z-10 max-h-36 overflow-y-auto border border-zinc-200 bg-white shadow-md"
+        >
           {suggestions.map((suggestion) => (
             <li
               key={suggestion.mapbox_id}

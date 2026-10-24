@@ -151,17 +151,44 @@ export async function deletePin(pinId: string) {
     };
   }
 
-  const { error } = await supabase
+  // delete the row and return the row's column to get the photo urls
+  const { data: deletedPin, error } = await supabase
     .from("pins")
     .delete()
     .eq("id", pinId)
-    .eq("user_id", user.id);
-  // .select()
-  // .single();
+    .eq("user_id", user.id)
+    .select("photo_urls"); // pull the photo urls array from the dropped row
 
-  if (error) {
-    console.error("Error in deletePin server action: ", error);
+  if (error || !deletedPin || deletedPin.length === 0) {
+    console.error("Error deleting database record or pin not found: ", error);
     return { success: false, error: "Failed to delete pin." };
+  }
+
+  // extract and parse the storage file paths from the public url strings
+  const photoUrls = deletedPin[0].photo_urls || [];
+  const filesToDelete = photoUrls
+    .map((url: string) => {
+      const parts = url.split("photo-uploads/");
+      return parts.length > 1
+        ? decodeURIComponent(parts[1].split("?")[0])
+        : null;
+    })
+    .filter(Boolean) as string[];
+
+  // purge the physical file frames out of supabase storage bucket
+  if (filesToDelete.length > 0) {
+    const { data: removed, error: storageError } = await supabase.storage
+      .from("photo-uploads")
+      .remove(filesToDelete);
+
+    // log as a warning instead of crashing because database row is already gone
+    if (storageError || removed?.length !== filesToDelete.length) {
+      console.warn("Storage cleanup incomplete: ", {
+        storageError,
+        removed,
+        filesToDelete,
+      });
+    }
   }
 
   revalidatePath("/map");
